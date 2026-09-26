@@ -19,6 +19,7 @@ from .models import CaseIn
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 ALLOWED_EXT = {".pdf", ".png", ".jpg", ".jpeg", ".webp"}
+MAX_DOCS_PER_CASE = 20  # new cases start with up to MAX_FILES; analysts can add more evidence later
 
 
 @asynccontextmanager
@@ -255,8 +256,8 @@ async def add_documents(case_id: str, files: list[UploadFile] = File(...),
     if not db.get_case(case_id):
         raise HTTPException(404, "Case not found")
     existing = db.list_documents(case_id, include_deleted=True)
-    if len(db.list_documents(case_id)) + len(files) > MAX_FILES:
-        raise HTTPException(400, f"At most {MAX_FILES} evidence files per case.")
+    if len(db.list_documents(case_id)) + len(files) > MAX_DOCS_PER_CASE:
+        raise HTTPException(400, f"At most {MAX_DOCS_PER_CASE} evidence files per case.")
     names = await _store_files(case_id, files, start=len(existing) + 1)
     db.log(case_id, f"Evidence added: {', '.join(names)}")
     return _detail(case_id)

@@ -3,8 +3,6 @@ import clsx from 'clsx'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeft,
-  ArrowRight,
-  CalendarClock,
   Check,
   CircleAlert,
   Eye,
@@ -14,6 +12,7 @@ import {
   Info,
   Link2,
   Loader2,
+  Plus,
   RefreshCw,
   RotateCcw,
   Save,
@@ -22,17 +21,18 @@ import {
   TriangleAlert,
   X,
 } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, useBlocker, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useWithCode } from '../../components/AccessCode'
 import { Modal } from '../../components/Modal'
-import { ActionPill, ConfidenceMeter, SchemeBadge, StatusChip } from '../../components/status'
+import { ActionPill, ConfidenceMeter, SchemeBadge, StatusChip, VERDICT } from '../../components/status'
 import { useToast } from '../../components/toast'
 import { Button, Skeleton, Tooltip } from '../../components/ui'
 import { api } from '../../lib/api'
 import { dashboardPath } from '../../lib/filters'
 import { ACTION_LABEL, COMPLETE_LABEL, money, shortDate } from '../../lib/format'
-import type { Action, Alert, CaseDetail, Requirement, Review, Signal, Verdict } from '../../lib/types'
+import type { Action, Alert, CaseDetail, Requirement, Review, Signal, Verdict, Workup } from '../../lib/types'
+import { AddEvidenceDialog, type Gap } from './AddEvidence'
 import { EvidenceSection } from './Evidence'
 import { ActionSection, ActivitySection, ReasonSection, RationaleSection, RequestsSection } from './Sections'
 import { Viewer, type CiteRef, type ViewerDoc } from './Viewer'
@@ -101,11 +101,12 @@ function AnalysisView({ detail, viewingOld }: { detail: CaseDetail; viewingOld: 
   const [activeDoc, setActiveDoc] = useState<string | null>(workup?.documents[0]?.doc_key ?? detail.pending_documents[0]?.doc_key ?? null)
   const [hoveredReq, setHoveredReq] = useState<string | null>(null)
   const [flashReq, setFlashReq] = useState<{ id: string; nonce: number } | null>(null)
-  const [dialog, setDialog] = useState<null | 'complete' | 'reanalyse'>(null)
+  const [dialog, setDialog] = useState<null | 'complete' | 'reanalyse' | 'evidence'>(null)
   const { withCode, dialog: codeDialog } = useWithCode()
-  const [uploading, setUploading] = useState(false)
   const { data: meta } = useQuery({ queryKey: ['meta'], queryFn: api.meta, staleTime: Infinity })
   const canAnalyse = meta?.has_api_key ?? false
+  const paneRef = useRef<HTMLDivElement>(null)
+  const [section, setSection] = useState('sec-reason')
 
   const update = useCallback((fn: (r: Review) => Review) => {
     setDraft(fn)
@@ -147,7 +148,47 @@ function AnalysisView({ detail, viewingOld }: { detail: CaseDetail; viewingOld: 
     return [...analysed, ...pending]
   }, [workup, detail.pending_documents, detail.removed_documents, draft.relevance_overrides])
 
-  const hasNewEvidence = detail.pending_documents.length > 0 || detail.removed_documents.length > 0
+  // Gaps the analysis flagged: offered as upload slots in the Add evidence dialog.
+  const gaps: Gap[] = useMemo(() => {
+    if (!workup) return []
+    const reqGaps = workup.requirements
+      .filter((r) => ['missing', 'partial'].includes(verdictOf(r)) && r.fixable && r.gap)
+      .map((r) => ({ id: r.id, title: r.title, gap: r.gap }))
+    const fileGaps = workup.documents.filter((d) => d.error).map((d) => ({ id: d.doc_key, title: `${d.filename} is missing`, gap: 'Upload the file again.' }))
+    return [...reqGaps, ...fileGaps]
+  }, [workup, verdictOf])
+
+  const hasUnanalysed = (detail.pending_documents.length > 0 || detail.removed_documents.length > 0) && !detail.job
+
+  // ------------------------------------------------------- section timeline
+  const steps = useMemo(() => {
+    const out: { id: string; label: string; dots?: Verdict[] }[] = [
+      { id: 'sec-reason', label: 'Reason' },
+      { id: 'sec-evidence', label: 'Evidence', dots: workup?.requirements.map(verdictOf) },
+      { id: 'sec-rationale', label: 'Rationale' },
+      { id: 'sec-action', label: 'Decision' },
+    ]
+    if (action === 'request_more_evidence') out.push({ id: 'sec-requests', label: 'Requests' })
+    return out
+  }, [workup, verdictOf, action])
+
+  const onPaneScroll = useCallback(() => {
+    const pane = paneRef.current
+    if (!pane) return
+    let current = steps[0].id
+    for (const s of steps) {
+      const el = document.getElementById(s.id)
+      if (el && el.offsetTop - pane.scrollTop <= 130) current = s.id
+    }
+    if (pane.scrollTop + pane.clientHeight >= pane.scrollHeight - 4) current = steps.at(-1)!.id
+    setSection(current)
+  }, [steps])
+
+  const goTo = (id: string) => {
+    const pane = paneRef.current
+    const el = document.getElementById(id)
+    if (pane && el) pane.scrollTo({ top: el.offsetTop - 96, behavior: 'smooth' })
+  }
 
   // ---------------------------------------------------------------- actions
   const activate = useCallback((cite: CiteRef) => {
@@ -237,17 +278,23 @@ function AnalysisView({ detail, viewingOld }: { detail: CaseDetail; viewingOld: 
     }
   }
 
-  const addFiles = (files: File[]) =>
+  const startReanalysis = async () => {
+    if (dirty && !(await save())) return
+    await api.reanalyse(kase.case_id)
+    qc.invalidateQueries({ queryKey: ['case', kase.case_id] })
+    qc.invalidateQueries({ queryKey: ['jobs'] })
+  }
+
+  const addEvidence = (files: File[]) =>
     withCode(async () => {
-      setUploading(true)
-      try {
-        const data = await api.addDocuments(kase.case_id, files)
-        refresh(data)
-        const newest = data.pending_documents.at(-1)
-        if (newest) setActiveDoc(newest.doc_key)
+      const data = await api.addDocuments(kase.case_id, files)
+      refresh(data)
+      setDialog(null)
+      if (canAnalyse) {
+        await startReanalysis()
+        toast(`${files.length} document${files.length > 1 ? 's' : ''} added. Re-analysing the case`)
+      } else {
         toast(`${files.length} document${files.length > 1 ? 's' : ''} added`)
-      } finally {
-        setUploading(false)
       }
     })
 
@@ -260,10 +307,8 @@ function AnalysisView({ detail, viewingOld }: { detail: CaseDetail; viewingOld: 
 
   const reanalyse = () =>
     withCode(async () => {
-      if (dirty && !(await save())) return
-      await api.reanalyse(kase.case_id)
+      await startReanalysis()
       setDialog(null)
-      qc.invalidateQueries({ queryKey: ['case', kase.case_id] })
       toast('Re-analysis started')
     })
 
@@ -283,10 +328,11 @@ function AnalysisView({ detail, viewingOld }: { detail: CaseDetail; viewingOld: 
         readOnly={readOnly}
         completed={completed}
         onSave={save}
+        onAddEvidence={() => setDialog('evidence')}
         onComplete={() => {
           if (action !== workup.decision.action && !draft.action_reason.trim()) {
             toast('Add a reason for changing the recommendation first.', 'error')
-            document.getElementById('section-action')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            goTo('sec-action')
             return
           }
           setDialog('complete')
@@ -294,34 +340,31 @@ function AnalysisView({ detail, viewingOld }: { detail: CaseDetail; viewingOld: 
         onReopen={async () => refresh(await api.reopen(kase.case_id))}
       />
 
+      <CaseProfile detail={detail} workup={workup} />
+
       <div className="pane-scroll grid min-h-0 flex-1 gap-5 overflow-y-auto px-6 pt-4 pb-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)] lg:overflow-hidden">
         {/* Workup */}
-        <div className="pane-scroll relative pr-1 lg:min-h-0 lg:overflow-y-auto">
-          <div className="space-y-6 pb-10">
-            <AnimatePresence>
-              {hasNewEvidence && !viewingOld && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  className="sticky top-0 z-20 flex items-center justify-between gap-3 rounded-xl bg-ink px-4 py-3 text-white shadow-[var(--shadow-pop)]"
-                >
-                  <span className="flex items-center gap-2.5 text-[13px]">
-                    <FileSearch className="size-4 text-[#9db7f5]" />
-                    {detail.pending_documents.length > 0 &&
-                      `${detail.pending_documents.length} new document${detail.pending_documents.length > 1 ? 's' : ''}`}
-                    {detail.pending_documents.length > 0 && detail.removed_documents.length > 0 && ', '}
-                    {detail.removed_documents.length > 0 && `${detail.removed_documents.length} removed`}
-                    <span className="text-white/50">· not yet in the analysis</span>
-                  </span>
-                  <Tooltip text={canAnalyse ? undefined : 'Add ANTHROPIC_API_KEY to the server .env to enable re-analysis'} side="bottom">
-                    <Button size="sm" variant="primary" icon={<RefreshCw className="size-3.5" />} onClick={() => setDialog('reanalyse')} disabled={!!detail.job || !canAnalyse}>
-                      Re-analyse case
-                    </Button>
-                  </Tooltip>
-                </motion.div>
-              )}
-            </AnimatePresence>
+        <div ref={paneRef} onScroll={onPaneScroll} className="pane-scroll relative pr-1 lg:min-h-0 lg:overflow-y-auto">
+          <Timeline steps={steps} active={section} onGo={goTo} />
+
+          <div className="space-y-6 pt-2 pb-10">
+            {hasUnanalysed && !viewingOld && (
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-ink px-4 py-3 text-white">
+                <span className="flex items-center gap-2.5 text-[13px]">
+                  <FileSearch className="size-4 text-[#9db7f5]" />
+                  {detail.pending_documents.length > 0 &&
+                    `${detail.pending_documents.length} new document${detail.pending_documents.length > 1 ? 's' : ''}`}
+                  {detail.pending_documents.length > 0 && detail.removed_documents.length > 0 && ', '}
+                  {detail.removed_documents.length > 0 && `${detail.removed_documents.length} removed`}
+                  <span className="text-white/50">· not yet in the analysis</span>
+                </span>
+                <Tooltip text={canAnalyse ? undefined : 'Add ANTHROPIC_API_KEY to the server .env to enable re-analysis'} side="bottom">
+                  <Button size="sm" variant="primary" icon={<RefreshCw className="size-3.5" />} onClick={() => setDialog('reanalyse')} disabled={!canAnalyse}>
+                    Re-analyse case
+                  </Button>
+                </Tooltip>
+              </div>
+            )}
 
             {viewingOld && (
               <div className="flex items-center justify-between rounded-xl border border-blue-line bg-blue-soft px-4 py-3 text-[13px] text-blue">
@@ -334,44 +377,49 @@ function AnalysisView({ detail, viewingOld }: { detail: CaseDetail; viewingOld: 
               </div>
             )}
 
-            <Alerts alerts={workup.alerts} linked={detail.linked} onSelectRequirement={selectRequirement} />
+            <div id="sec-reason" className="space-y-6">
+              <Alerts alerts={workup.alerts} linked={detail.linked} onSelectRequirement={selectRequirement} />
+              <ReasonSection workup={workup} kase={kase} />
+            </div>
 
-            <ReasonSection workup={workup} kase={kase} />
+            <div id="sec-evidence">
+              <EvidenceSection
+                workup={workup}
+                docs={docs}
+                previous={detail.previous?.verdicts ?? null}
+                verdictOf={verdictOf}
+                override={(rid) => draft.verdict_overrides[rid]}
+                onOverride={(rid, verdict, note) =>
+                  update((r) => {
+                    const next = { ...r.verdict_overrides }
+                    if (verdict === null) delete next[rid]
+                    else next[rid] = { verdict, note: note ?? '' }
+                    return { ...r, verdict_overrides: next }
+                  })
+                }
+                cites={cites}
+                active={active}
+                onActivate={activate}
+                onHover={setHoveredReq}
+                flashReq={flashReq}
+                readOnly={readOnly}
+              />
+            </div>
 
-            <EvidenceSection
-              workup={workup}
-              docs={docs}
-              previous={detail.previous?.verdicts ?? null}
-              verdictOf={verdictOf}
-              override={(rid) => draft.verdict_overrides[rid]}
-              onOverride={(rid, verdict, note) =>
-                update((r) => {
-                  const next = { ...r.verdict_overrides }
-                  if (verdict === null) delete next[rid]
-                  else next[rid] = { verdict, note: note ?? '' }
-                  return { ...r, verdict_overrides: next }
-                })
-              }
-              cites={cites}
-              active={active}
-              onActivate={activate}
-              onHover={setHoveredReq}
-              flashReq={flashReq}
-              readOnly={readOnly}
-            />
+            <div id="sec-rationale">
+              <RationaleSection
+                value={rationale}
+                edited={!!draft.rationale}
+                aiChanged={!!draft.rationale && draft.rationale.base !== workup.rationale}
+                writtenFor={workup.decision.ai_action}
+                recommended={workup.decision.action}
+                onChange={(v) => update((r) => ({ ...r, rationale: { value: v, base: workup.rationale } }))}
+                onReset={() => update((r) => ({ ...r, rationale: null }))}
+                readOnly={readOnly}
+              />
+            </div>
 
-            <RationaleSection
-              value={rationale}
-              edited={!!draft.rationale}
-              aiChanged={!!draft.rationale && draft.rationale.base !== workup.rationale}
-              writtenFor={workup.decision.ai_action}
-              recommended={workup.decision.action}
-              onChange={(v) => update((r) => ({ ...r, rationale: { value: v, base: workup.rationale } }))}
-              onReset={() => update((r) => ({ ...r, rationale: null }))}
-              readOnly={readOnly}
-            />
-
-            <div id="section-action">
+            <div id="sec-action">
               <ActionSection
                 workup={workup}
                 action={action!}
@@ -388,14 +436,16 @@ function AnalysisView({ detail, viewingOld }: { detail: CaseDetail; viewingOld: 
 
             <AnimatePresence>
               {action === 'request_more_evidence' && (
-                <RequestsSection
-                  items={requests}
-                  onChange={(items) => update((r) => ({ ...r, merchant_requests: { value: items, base: workup.merchant_requests } }))}
-                  edited={!!draft.merchant_requests}
-                  onReset={() => update((r) => ({ ...r, merchant_requests: null }))}
-                  kase={kase}
-                  readOnly={readOnly}
-                />
+                <div id="sec-requests">
+                  <RequestsSection
+                    items={requests}
+                    onChange={(items) => update((r) => ({ ...r, merchant_requests: { value: items, base: workup.merchant_requests } }))}
+                    edited={!!draft.merchant_requests}
+                    onReset={() => update((r) => ({ ...r, merchant_requests: null }))}
+                    kase={kase}
+                    readOnly={readOnly}
+                  />
+                </div>
               )}
             </AnimatePresence>
 
@@ -442,34 +492,35 @@ function AnalysisView({ detail, viewingOld }: { detail: CaseDetail; viewingOld: 
 
         {/* Evidence viewer */}
         <div id="evidence-viewer" className="h-[85vh] lg:h-auto lg:min-h-0">
-        <Viewer
-          caseId={kase.case_id}
-          docs={docs}
-          cites={cites}
-          activeDoc={activeDoc}
-          onActiveDoc={setActiveDoc}
-          active={active}
-          focusNonce={focusNonce}
-          hoveredReq={hoveredReq}
-          onSelectRequirement={selectRequirement}
-          onAddFiles={addFiles}
-          onRemove={removeDoc}
-          onRelevance={(key, value) =>
-            update((r) => {
-              const next = { ...r.relevance_overrides }
-              const ai = workup.documents.find((d) => d.doc_key === key)?.relevance
-              if (value === ai) delete next[key]
-              else next[key] = value
-              return { ...r, relevance_overrides: next }
-            })
-          }
-          uploading={uploading}
-          readOnly={viewingOld || completed}
-        />
+          <Viewer
+            caseId={kase.case_id}
+            docs={docs}
+            cites={cites}
+            activeDoc={activeDoc}
+            onActiveDoc={setActiveDoc}
+            active={active}
+            focusNonce={focusNonce}
+            hoveredReq={hoveredReq}
+            onSelectRequirement={selectRequirement}
+            onAddEvidence={() => setDialog('evidence')}
+            onRemove={removeDoc}
+            onRelevance={(key, value) =>
+              update((r) => {
+                const next = { ...r.relevance_overrides }
+                const ai = workup.documents.find((d) => d.doc_key === key)?.relevance
+                if (value === ai) delete next[key]
+                else next[key] = value
+                return { ...r, relevance_overrides: next }
+              })
+            }
+            readOnly={viewingOld || completed}
+          />
         </div>
       </div>
 
       {/* Dialogs */}
+      <AddEvidenceDialog open={dialog === 'evidence'} onClose={() => setDialog(null)} gaps={gaps} canAnalyse={canAnalyse} onSubmit={addEvidence} />
+
       <Modal
         open={dialog === 'complete'}
         onClose={() => setDialog(null)}
@@ -533,8 +584,7 @@ function AnalysisView({ detail, viewingOld }: { detail: CaseDetail; viewingOld: 
         }
       >
         <p className="text-[13.5px] leading-relaxed text-text-2">
-          The AI will re-read every document, including the new evidence, and produce version {workup.version + 1}.
-          {dirty || detail.review ? ' Your edits are kept, and anything the AI changes is marked so you can compare.' : ''}
+          The AI will re-read every document and produce version {workup.version + 1}. Your edits are kept, and anything the AI changes is marked so you can compare.
         </p>
       </Modal>
 
@@ -575,7 +625,7 @@ async function nextCaseId(current: string): Promise<string | null> {
 
 // ---------------------------------------------------------------- header
 
-function Header({ detail, action, dirty, saving, readOnly, completed, onSave, onComplete, onReopen }: {
+function Header({ detail, action, dirty, saving, readOnly, completed, onSave, onAddEvidence, onComplete, onReopen }: {
   detail: CaseDetail
   action: Action
   dirty: boolean
@@ -583,129 +633,198 @@ function Header({ detail, action, dirty, saving, readOnly, completed, onSave, on
   readOnly: boolean
   completed: boolean
   onSave: () => void
+  onAddEvidence: () => void
   onComplete: () => void
   onReopen: () => void
 }) {
   const { case: kase, workup, summary } = detail
   const navigate = useNavigate()
-  const [next, setNext] = useState<string | null>(null)
-  useEffect(() => {
-    nextCaseId(kase.case_id).then(setNext).catch(() => setNext(null))
-  }, [kase.case_id])
 
   return (
-    <div className="border-b border-line bg-surface">
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-4">
-        <div className="flex min-w-[320px] flex-1 items-center gap-4">
-          <Tooltip text="Back to dashboard" side="bottom">
-            <button onClick={() => navigate(dashboardPath())} className="flex size-9 items-center justify-center rounded-lg border border-line text-text-2 transition-colors hover:border-[#cfd6e4] hover:text-text" aria-label="Back to dashboard">
-              <ArrowLeft className="size-4" />
-            </button>
-          </Tooltip>
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs whitespace-nowrap text-muted">
-              <span className="font-mono font-medium text-text-2">{kase.case_id}</span>
-              <StatusChip status={kase.status} />
-              <span className="flex items-center gap-1">
-                <CalendarClock className="size-3.5" /> Chargeback {shortDate(kase.chargeback_date)}
-              </span>
-            </div>
-            <div className="mt-1 flex min-w-0 items-center gap-3">
-              <h1 className="truncate text-xl font-semibold tracking-tight">{kase.transaction.merchant_name}</h1>
-              <span className="shrink-0 font-mono text-xl font-semibold tabular">{money(kase.chargeback_amount)}</span>
-              <span className="shrink-0"><SchemeBadge scheme={kase.scheme} code={kase.reason_code} /></span>
-            </div>
-          </div>
-        </div>
-
-        <div className="ml-auto flex flex-wrap items-center justify-end gap-3">
-          {workup && (
-            <div className="flex items-center gap-3 border-r border-line pr-4">
-              <ActionPill action={action} />
-              {summary.needs_judgement && (
-                <Tooltip text="The rule check and the AI disagree" side="bottom">
-                  <span className="flex size-7 items-center justify-center rounded-full bg-judge-soft text-judge">
-                    <Scale className="size-4" />
-                  </span>
-                </Tooltip>
-              )}
-              <ConfidenceMeter level={workup.decision.confidence.level} />
-            </div>
-          )}
-          {detail.versions.length > 1 && (
-            <select
-              value={workup?.version}
-              onChange={(e) => {
-                const v = Number(e.target.value)
-                navigate(v === detail.versions.at(-1)?.version ? `/cases/${kase.case_id}` : `/cases/${kase.case_id}?v=${v}`)
-              }}
-              className="h-9 rounded-lg border border-line bg-surface px-2 text-[13px] font-medium outline-none"
-              aria-label="Analysis version"
-            >
-              {[...detail.versions].reverse().map((v, i) => (
-                <option key={v.version} value={v.version}>
-                  v{v.version}
-                  {i === 0 ? ' · latest' : ''}
-                </option>
-              ))}
-            </select>
-          )}
-          {completed ? (
-            <Button icon={<RotateCcw className="size-4" />} onClick={onReopen}>
-              Reopen
-            </Button>
-          ) : (
-            <>
-              <Button icon={<Save className="size-4" />} onClick={onSave} loading={saving} disabled={readOnly || !dirty} className="relative">
-                Save
-                {dirty && <span className="absolute -top-1 -right-1 size-2.5 rounded-full border-2 border-white bg-blue" />}
-              </Button>
-              <Button variant="dark" icon={<Gavel className="size-4" />} onClick={onComplete} disabled={readOnly || !workup}>
-                {COMPLETE_LABEL[action]}
-              </Button>
-            </>
-          )}
-          <Tooltip text={next ? `Next case: ${next}` : 'No other open cases'} side="bottom">
-            <button
-              disabled={!next}
-              onClick={() => next && navigate(`/cases/${next}`)}
-              className="flex size-9 items-center justify-center rounded-lg border border-line text-text-2 transition-colors hover:text-text disabled:opacity-40"
-              aria-label="Next case"
-            >
-              <ArrowRight className="size-4" />
-            </button>
-          </Tooltip>
+    <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b border-line bg-surface px-6 py-3">
+      <div className="flex min-w-0 items-center gap-3.5">
+        <Tooltip text="Back to dashboard" side="bottom">
+          <button onClick={() => navigate(dashboardPath())} className="flex size-9 items-center justify-center rounded-lg border border-line text-text-2 transition-colors hover:border-[#cfd6e4] hover:text-text" aria-label="Back to dashboard">
+            <ArrowLeft className="size-4" />
+          </button>
+        </Tooltip>
+        <div className="min-w-0">
+          <p className="font-mono text-[11.5px] text-muted">{kase.case_id}</p>
+          <h1 className="truncate text-lg leading-tight font-semibold tracking-tight">{kase.transaction.merchant_name}</h1>
         </div>
       </div>
-      <SignalStrip signals={detail.signals} />
+
+      <div className="ml-auto flex flex-wrap items-center justify-end gap-2.5">
+        {workup && (
+          <div className="mr-2 flex items-center gap-2.5">
+            <ActionPill action={action} />
+            {summary.needs_judgement && (
+              <Tooltip text="The rule check and the AI disagree" side="bottom">
+                <span className="flex size-7 items-center justify-center rounded-full bg-judge-soft text-judge">
+                  <Scale className="size-4" />
+                </span>
+              </Tooltip>
+            )}
+            <ConfidenceMeter level={workup.decision.confidence.level} />
+          </div>
+        )}
+        {detail.versions.length > 1 && (
+          <select
+            value={workup?.version}
+            onChange={(e) => {
+              const v = Number(e.target.value)
+              navigate(v === detail.versions.at(-1)?.version ? `/cases/${kase.case_id}` : `/cases/${kase.case_id}?v=${v}`)
+            }}
+            className="h-9 rounded-lg border border-line bg-surface px-2 text-[13px] font-medium outline-none"
+            aria-label="Analysis version"
+          >
+            {[...detail.versions].reverse().map((v, i) => (
+              <option key={v.version} value={v.version}>
+                v{v.version}
+                {i === 0 ? ' · latest' : ''}
+              </option>
+            ))}
+          </select>
+        )}
+        {completed ? (
+          <Button icon={<RotateCcw className="size-4" />} onClick={onReopen}>
+            Reopen
+          </Button>
+        ) : (
+          <>
+            <Button icon={<Plus className="size-4" />} onClick={onAddEvidence} disabled={readOnly}>
+              Add evidence
+            </Button>
+            <Button icon={<Save className="size-4" />} onClick={onSave} loading={saving} disabled={readOnly || !dirty} className="relative">
+              Save
+              {dirty && <span className="absolute -top-1 -right-1 size-2.5 rounded-full border-2 border-white bg-blue" />}
+            </Button>
+            <Button variant="dark" icon={<Gavel className="size-4" />} onClick={onComplete} disabled={readOnly || !workup}>
+              {COMPLETE_LABEL[action]}
+            </Button>
+          </>
+        )}
+      </div>
+    </header>
+  )
+}
+
+// ----------------------------------------------------------- case profile
+
+const SIGNAL_TONE: Record<Signal['status'], string> = { pass: 'text-ok', fail: 'text-bad', warn: 'text-warn', neutral: 'text-text' }
+
+function SignalValue({ s }: { s?: Signal }) {
+  if (!s) return <span className="text-muted">Unknown</span>
+  return (
+    <span className={clsx('inline-flex items-center gap-1 font-semibold', SIGNAL_TONE[s.status])}>
+      {s.status === 'pass' && <Check className="size-3.5" strokeWidth={2.6} />}
+      {s.status === 'fail' && <X className="size-3.5" strokeWidth={2.6} />}
+      {s.status === 'warn' && <TriangleAlert className="size-3.5" />}
+      {s.value}
+    </span>
+  )
+}
+
+function Tile({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
+  return (
+    <div className={clsx('min-w-0 rounded-xl border border-line bg-surface px-4 py-2.5 shadow-[var(--shadow-card)]', className)}>
+      <p className="text-[10.5px] font-semibold tracking-wide text-muted uppercase">{label}</p>
+      <div className="mt-1 text-[13px] text-text">{children}</div>
     </div>
   )
 }
 
-const SIGNAL_STYLE: Record<Signal['status'], string> = {
-  pass: 'text-ok',
-  fail: 'text-bad',
-  warn: 'text-warn',
-  neutral: 'text-text-2',
-}
-
-function SignalStrip({ signals }: { signals: Signal[] }) {
+/** The case at a glance. Stays fixed while the workup and documents scroll. */
+function CaseProfile({ detail, workup }: { detail: CaseDetail; workup: Workup }) {
+  const { case: kase } = detail
+  const sig = (key: string) => detail.signals.find((s) => s.key === key)
+  const device = sig('device')
   return (
-    <div className="flex flex-wrap items-center gap-2 border-t border-line-2 px-6 py-2.5">
-      {signals.map((s) => (
-        <Tooltip key={s.key} text={s.detail} side="bottom">
-          <span className="flex shrink-0 items-center gap-1.5 rounded-lg bg-canvas px-2.5 py-1 text-xs">
-            <span className="font-medium text-muted">{s.label}</span>
-            <span className={clsx('flex items-center gap-1 font-semibold', SIGNAL_STYLE[s.status])}>
-              {s.status === 'pass' && <Check className="size-3.5" strokeWidth={2.6} />}
-              {s.status === 'fail' && <X className="size-3.5" strokeWidth={2.6} />}
-              {s.status === 'warn' && <TriangleAlert className="size-3.5" />}
-              {s.value}
-            </span>
+    <div className="grid grid-cols-2 gap-2.5 px-6 pt-4 sm:grid-cols-3 xl:grid-cols-[auto_auto_auto_auto_minmax(0,1.4fr)_auto_minmax(0,1.2fr)]">
+      <Tile label="Amount">
+        <span className="font-mono text-[15px] font-semibold tabular">{money(kase.chargeback_amount)}</span>
+      </Tile>
+      <Tile label="Reason">
+        <Tooltip text={workup.rule.title}>
+          <span className="flex items-center gap-2">
+            <SchemeBadge scheme={kase.scheme} code={kase.reason_code} />
+            <span className="truncate">{workup.rule.category}</span>
           </span>
         </Tooltip>
-      ))}
+      </Tile>
+      <Tile label="Chargeback">
+        <span className="font-medium tabular">{shortDate(kase.chargeback_date)}</span>
+      </Tile>
+      <Tile label="Status">
+        <StatusChip status={kase.status} />
+      </Tile>
+      <Tile label="Card checks">
+        <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          {(['avs', 'cvv', 'three_ds'] as const).map((k) => (
+            <span key={k} className="flex items-center gap-1.5">
+              <span className="text-muted">{sig(k)?.label}</span>
+              <SignalValue s={sig(k)} />
+            </span>
+          ))}
+        </span>
+      </Tile>
+      <Tile label="Address">
+        <Tooltip text={sig('address')?.detail}>
+          <SignalValue s={sig('address')} />
+        </Tooltip>
+      </Tile>
+      <Tile label="Origin">
+        <Tooltip text={device?.detail ? `Device ${device.detail}` : undefined}>
+          <span className="flex flex-wrap items-center gap-x-2 text-text-2">
+            <span className="font-semibold text-text">{sig('bin')?.value}</span>
+            <span className="font-mono text-[12px]">{sig('ip')?.value}</span>
+            {device && <span className="text-[12px]">· {device.value}</span>}
+          </span>
+        </Tooltip>
+      </Tile>
     </div>
+  )
+}
+
+// --------------------------------------------------------------- timeline
+
+function Timeline({ steps, active, onGo }: { steps: { id: string; label: string; dots?: Verdict[] }[]; active: string; onGo: (id: string) => void }) {
+  const current = Math.max(0, steps.findIndex((s) => s.id === active))
+  return (
+    <nav aria-label="Sections" className="sticky top-0 z-20 -mx-1 bg-canvas px-1 pb-3">
+      <div className="flex items-center rounded-2xl border border-line bg-surface px-4 py-2.5 shadow-[var(--shadow-card)]">
+        {steps.map((s, i) => {
+          const state = i < current ? 'done' : i === current ? 'active' : 'todo'
+          return (
+            <Fragment key={s.id}>
+              <button onClick={() => onGo(s.id)} className="group flex shrink-0 items-center gap-2 rounded-lg py-1 pr-1">
+                <span
+                  className={clsx(
+                    'flex size-6 items-center justify-center rounded-full text-[11px] font-semibold transition-colors duration-300',
+                    state === 'active' ? 'bg-ink text-white' : state === 'done' ? 'bg-blue text-white' : 'border border-line bg-surface text-muted group-hover:border-[#cfd6e4]',
+                  )}
+                >
+                  {state === 'done' ? <Check className="size-3.5" strokeWidth={3} /> : i + 1}
+                </span>
+                <span className={clsx('text-[13px] transition-colors', state === 'active' ? 'font-semibold text-text' : 'font-medium text-muted group-hover:text-text-2')}>{s.label}</span>
+                {s.dots && (
+                  <span className="flex items-center gap-[3px]" aria-hidden>
+                    {s.dots.map((v, j) => (
+                      <span key={j} className={clsx('size-1.5 rounded-full', VERDICT[v].dot)} />
+                    ))}
+                  </span>
+                )}
+              </button>
+              {i < steps.length - 1 && (
+                <span className="relative mx-2.5 h-0.5 min-w-4 flex-1 overflow-hidden rounded-full bg-line">
+                  <motion.span className="absolute inset-y-0 left-0 bg-blue" initial={false} animate={{ width: i < current ? '100%' : '0%' }} transition={{ duration: 0.35 }} />
+                </span>
+              )}
+            </Fragment>
+          )
+        })}
+      </div>
+    </nav>
   )
 }
 
@@ -793,13 +912,18 @@ function NoWorkup({ detail }: { detail: CaseDetail }) {
 function LoadingState() {
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b border-line bg-surface px-6 py-5">
-        <Skeleton className="h-4 w-48" />
-        <Skeleton className="mt-3 h-6 w-80" />
+      <div className="border-b border-line bg-surface px-6 py-4">
+        <Skeleton className="h-3 w-32" />
+        <Skeleton className="mt-2 h-5 w-64" />
+      </div>
+      <div className="flex gap-2.5 px-6 pt-4">
+        {Array.from({ length: 6 }, (_, i) => (
+          <Skeleton key={i} className="h-14 flex-1" />
+        ))}
       </div>
       <div className="grid flex-1 grid-cols-2 gap-5 p-6">
         <div className="space-y-4">
-          <Skeleton className="h-36" />
+          <Skeleton className="h-14" />
           <Skeleton className="h-44" />
           <Skeleton className="h-44" />
         </div>
