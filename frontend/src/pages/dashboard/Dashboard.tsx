@@ -81,10 +81,7 @@ export function Dashboard() {
     <div className="pane-scroll h-full overflow-y-auto">
       {dialog}
       <div className="mx-auto max-w-[1400px] px-8 pt-8 pb-24">
-        <div className="flex items-center gap-3">
-          <img src="/logo.svg" alt="Exhibit" className="size-9" />
-          <h1 className="text-[26px] font-semibold tracking-tight">Dashboard</h1>
-        </div>
+        <h1 className="text-[32px] font-semibold tracking-tight">Dashboard</h1>
 
         <UploadZone onOpen={(files) => setDrawer({ open: true, files })} />
 

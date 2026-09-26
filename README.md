@@ -4,7 +4,7 @@ A workbench for chargeback analysts. You give it a case (reason code, transactio
 
 There's a step-by-step tour with screenshots in [WALKTHROUGH.md](WALKTHROUGH.md).
 
-**Live demo:** https://exhibit-disputes.fly.dev. Browsing the 10 cases is open; creating or re-analysing a case asks for an access code (sent with the submission).
+**Live demo:** https://exhibit-disputes.fly.dev. You can browse the 10 cases and also upload a new one to see a live analysis.
 
 ## Running it
 

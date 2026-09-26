@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import { motion } from 'framer-motion'
-import { ChevronRight, Eye, FileSearch, FileWarning, Link2, Paperclip, RotateCcw, Scale, ShieldAlert, TriangleAlert } from 'lucide-react'
+import { ChevronRight, Eye, FileSearch, FileWarning, RotateCcw, Scale, ShieldAlert, TriangleAlert } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { stageInfo } from '../../components/ProcessingDock'
 import { ActionPill, ConfidenceMeter, SchemeBadge, StatusChip } from '../../components/status'
@@ -17,24 +17,19 @@ const FLAG_META: Record<string, { icon: typeof Eye; text: string }> = {
   missing_file: { icon: FileWarning, text: 'A document is missing or unreadable' },
 }
 
+/** Only the flags that change what the analyst does before opening a case; the rest live on the case page. */
 function Flags({ c }: { c: CaseSummary }) {
-  const flags = [...c.flags]
+  const shown = ['judgement', 'conflict'].filter((f) => c.flags.includes(f) || (f === 'judgement' && c.needs_judgement))
   return (
-    <span className="flex items-center gap-1.5 text-muted">
-      {flags.map((f) => {
+    <span className="flex items-center gap-1.5">
+      {shown.map((f) => {
         const meta = FLAG_META[f]
-        if (!meta) return null
         return (
           <Tooltip key={f} text={meta.text}>
-            <meta.icon className={clsx('size-4', f === 'judgement' ? 'text-judge' : f === 'conflict' || f === 'unverified' ? 'text-warn' : '')} />
+            <meta.icon className={clsx('size-4', f === 'judgement' ? 'text-judge' : 'text-warn')} />
           </Tooltip>
         )
       })}
-      {c.linked > 0 && (
-        <Tooltip text={`${c.linked} linked case${c.linked > 1 ? 's' : ''} (same device, IP or postcode)`}>
-          <Link2 className="size-4" />
-        </Tooltip>
-      )}
     </span>
   )
 }
@@ -62,7 +57,9 @@ export function CaseCard({ c, job, onRetry, index }: { c: CaseSummary; job?: Job
       <p className="mt-0.5 font-mono text-[22px] font-semibold tracking-tight tabular">{money(c.amount)}</p>
       <div className="mt-3 flex min-w-0 items-center gap-2">
         <SchemeBadge scheme={c.scheme} code={c.reason_code} />
-        <span className="truncate text-[12.5px] text-text-2">{c.reason_label}</span>
+        <Tooltip text={c.reason_label}>
+          <span className="truncate text-[12.5px] text-text-2">{c.category}</span>
+        </Tooltip>
       </div>
 
       <div className="mt-auto pt-4">
@@ -93,19 +90,12 @@ export function CaseCard({ c, job, onRetry, index }: { c: CaseSummary; job?: Job
           ) : (
             <div className="flex items-center justify-between gap-2">
               {c.action ? <ActionPill action={c.action} size="sm" /> : <span />}
-              <span className="flex items-center gap-3">
-                <Flags c={c} />
-                <span className="flex items-center gap-1 text-[12px] text-muted">
-                  <Paperclip className="size-3.5" />
-                  {c.doc_count}
-                </span>
-              </span>
+              <Flags c={c} />
             </div>
           )}
           {!processing && !failed && c.confidence && (
-            <div className="mt-2.5 flex items-center justify-between">
+            <div className="mt-2.5">
               <ConfidenceMeter level={c.confidence} />
-              <span className="text-[11.5px] text-muted">{c.category}</span>
             </div>
           )}
         </div>
