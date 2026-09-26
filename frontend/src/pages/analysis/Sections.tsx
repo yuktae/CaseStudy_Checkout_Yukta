@@ -2,15 +2,22 @@ import clsx from 'clsx'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronDown, Copy, History, Mail, MessageSquareQuote, Plus, RotateCcw, Scale, Sparkles, X } from 'lucide-react'
 import { useLayoutEffect, useRef, useState } from 'react'
-import { ACTION, ConfidenceMeter, SchemeBadge } from '../../components/status'
+import { ACTION, ConfidenceMeter, SchemeBadge, VERDICT } from '../../components/status'
 import { Button, Card, SectionTitle } from '../../components/ui'
 import { useToast } from '../../components/toast'
 import { ACTION_LABEL, dateTime, sentenceCount } from '../../lib/format'
-import type { Action, Case, Workup } from '../../lib/types'
+import type { Action, Case, Verdict, Workup } from '../../lib/types'
 
 // ------------------------------------------------------------ 1. Reason
 
-export function ReasonSection({ workup, kase }: { workup: Workup; kase: Case }) {
+export interface DefendItem {
+  id: string
+  title: string
+  text: string
+  verdict: Verdict
+}
+
+export function ReasonSection({ workup, kase, items, onPick }: { workup: Workup; kase: Case; items: DefendItem[]; onPick: (id: string) => void }) {
   const [showNarrative, setShowNarrative] = useState(false)
   return (
     <section>
@@ -31,7 +38,28 @@ export function ReasonSection({ workup, kase }: { workup: Workup; kase: Case }) 
               To defend
               <span className="rounded bg-blue-soft px-1.5 py-px text-[10px] tracking-normal text-blue normal-case">{workup.rule.logic_label}</span>
             </dt>
-            <dd className="text-text">{workup.summary.to_defend}</dd>
+            <dd>
+              <ul className="mt-1.5 divide-y divide-line-2 overflow-hidden rounded-xl border border-line">
+                {items.map((it) => {
+                  const v = VERDICT[it.verdict]
+                  return (
+                    <li key={it.id}>
+                      <button onClick={() => onPick(it.id)} className="flex w-full items-start gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-[#fafbfd]">
+                        <v.icon className={clsx('mt-0.5 size-[18px] shrink-0', v.cls.split(' ')[1])} strokeWidth={2.2} />
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-center gap-2">
+                            <span className="font-mono text-[11px] font-semibold text-muted">{it.id}</span>
+                            <span className={clsx('text-[13.5px] font-medium', it.verdict === 'not_applicable' ? 'text-muted line-through decoration-muted/40' : 'text-text')}>{it.title}</span>
+                          </span>
+                          <span className="mt-0.5 block text-[12.5px] leading-snug text-muted">{it.text}</span>
+                        </span>
+                        <span className={clsx('mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold', v.cls)}>{v.label}</span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            </dd>
           </div>
           {workup.rule.note && <dd className="rounded-lg bg-judge-soft px-3 py-2 text-[13px] text-judge">{workup.rule.note}</dd>}
         </dl>

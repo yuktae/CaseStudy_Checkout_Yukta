@@ -379,7 +379,12 @@ function AnalysisView({ detail, viewingOld }: { detail: CaseDetail; viewingOld: 
 
             <div id="sec-reason" className="space-y-6">
               <Alerts alerts={workup.alerts} linked={detail.linked} onSelectRequirement={selectRequirement} />
-              <ReasonSection workup={workup} kase={kase} />
+              <ReasonSection
+                workup={workup}
+                kase={kase}
+                items={workup.requirements.map((r) => ({ id: r.id, title: r.title, text: r.text, verdict: verdictOf(r) }))}
+                onPick={selectRequirement}
+              />
             </div>
 
             <div id="sec-evidence">
@@ -711,77 +716,81 @@ function Header({ detail, action, dirty, saving, readOnly, completed, onSave, on
 
 // ----------------------------------------------------------- case profile
 
-const SIGNAL_TONE: Record<Signal['status'], string> = { pass: 'text-ok', fail: 'text-bad', warn: 'text-warn', neutral: 'text-text' }
-
-function SignalValue({ s }: { s?: Signal }) {
-  if (!s) return <span className="text-muted">Unknown</span>
+function Cell({ label, children, grow }: { label: string; children: ReactNode; grow?: boolean }) {
   return (
-    <span className={clsx('inline-flex items-center gap-1 font-semibold', SIGNAL_TONE[s.status])}>
-      {s.status === 'pass' && <Check className="size-3.5" strokeWidth={2.6} />}
-      {s.status === 'fail' && <X className="size-3.5" strokeWidth={2.6} />}
-      {s.status === 'warn' && <TriangleAlert className="size-3.5" />}
-      {s.value}
-    </span>
-  )
-}
-
-function Tile({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
-  return (
-    <div className={clsx('min-w-0 rounded-xl border border-line bg-surface px-4 py-2.5 shadow-[var(--shadow-card)]', className)}>
+    <div className={clsx('flex min-w-0 flex-col justify-center gap-1.5 px-5 py-3', grow && 'flex-1')}>
       <p className="text-[10.5px] font-semibold tracking-wide text-muted uppercase">{label}</p>
-      <div className="mt-1 text-[13px] text-text">{children}</div>
+      <div className="flex min-h-7 items-center text-[13px] text-text">{children}</div>
     </div>
   )
 }
 
-/** The case at a glance. Stays fixed while the workup and documents scroll. */
+const PILL_TONE: Record<Signal['status'], string> = {
+  pass: 'bg-ok-soft text-ok',
+  fail: 'bg-bad-soft text-bad',
+  warn: 'bg-warn-soft text-warn',
+  neutral: 'bg-line-2 text-text-2',
+}
+
+function CheckPill({ s, name }: { s?: Signal; name: string }) {
+  if (!s) return null
+  const Icon = s.status === 'pass' ? Check : s.status === 'fail' ? X : TriangleAlert
+  return (
+    <Tooltip text={`${name}: ${s.value}${s.detail ? ` (${s.detail})` : ''}`}>
+      <span className={clsx('inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold', PILL_TONE[s.status])}>
+        <Icon className="size-3.5" strokeWidth={2.6} />
+        {name}
+      </span>
+    </Tooltip>
+  )
+}
+
+/** The case at a glance, in one card. Stays fixed while the workup and documents scroll. */
 function CaseProfile({ detail, workup }: { detail: CaseDetail; workup: Workup }) {
   const { case: kase } = detail
   const sig = (key: string) => detail.signals.find((s) => s.key === key)
   const device = sig('device')
+  const address = sig('address')
   return (
-    <div className="grid grid-cols-2 gap-2.5 px-6 pt-4 sm:grid-cols-3 xl:grid-cols-[auto_auto_auto_auto_minmax(0,1.4fr)_auto_minmax(0,1.2fr)]">
-      <Tile label="Amount">
-        <span className="font-mono text-[15px] font-semibold tabular">{money(kase.chargeback_amount)}</span>
-      </Tile>
-      <Tile label="Reason">
-        <Tooltip text={workup.rule.title}>
-          <span className="flex items-center gap-2">
-            <SchemeBadge scheme={kase.scheme} code={kase.reason_code} />
-            <span className="truncate">{workup.rule.category}</span>
-          </span>
-        </Tooltip>
-      </Tile>
-      <Tile label="Chargeback">
-        <span className="font-medium tabular">{shortDate(kase.chargeback_date)}</span>
-      </Tile>
-      <Tile label="Status">
-        <StatusChip status={kase.status} />
-      </Tile>
-      <Tile label="Card checks">
-        <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          {(['avs', 'cvv', 'three_ds'] as const).map((k) => (
-            <span key={k} className="flex items-center gap-1.5">
-              <span className="text-muted">{sig(k)?.label}</span>
-              <SignalValue s={sig(k)} />
+    <div className="px-6 pt-4">
+      <div className="flex flex-wrap items-stretch divide-x divide-line-2 rounded-2xl border border-line bg-surface shadow-[var(--shadow-card)]">
+        <Cell label="Amount">
+          <span className="font-mono text-[20px] leading-none font-semibold tabular">{money(kase.chargeback_amount)}</span>
+        </Cell>
+        <Cell label="Reason">
+          <Tooltip text={workup.rule.title}>
+            <span className="flex items-center gap-2 whitespace-nowrap">
+              <SchemeBadge scheme={kase.scheme} code={kase.reason_code} />
+              <span className="font-medium">{workup.rule.category}</span>
             </span>
-          ))}
-        </span>
-      </Tile>
-      <Tile label="Address">
-        <Tooltip text={sig('address')?.detail}>
-          <SignalValue s={sig('address')} />
-        </Tooltip>
-      </Tile>
-      <Tile label="Origin">
-        <Tooltip text={device?.detail ? `Device ${device.detail}` : undefined}>
-          <span className="flex flex-wrap items-center gap-x-2 text-text-2">
-            <span className="font-semibold text-text">{sig('bin')?.value}</span>
-            <span className="font-mono text-[12px]">{sig('ip')?.value}</span>
-            {device && <span className="text-[12px]">· {device.value}</span>}
+          </Tooltip>
+        </Cell>
+        <Cell label="Chargeback">
+          <span className="font-medium whitespace-nowrap tabular">{shortDate(kase.chargeback_date)}</span>
+        </Cell>
+        <Cell label="Status">
+          <StatusChip status={kase.status} />
+        </Cell>
+        <Cell label="Checks" grow>
+          <span className="flex flex-wrap items-center gap-1.5">
+            <CheckPill s={sig('avs')} name="AVS" />
+            <CheckPill s={sig('cvv')} name="CVV" />
+            <CheckPill s={sig('three_ds')} name="3DS" />
+            {address && address.status !== 'neutral' && <CheckPill s={address} name={address.status === 'pass' ? 'Same address' : 'Different address'} />}
           </span>
-        </Tooltip>
-      </Tile>
+        </Cell>
+        <Cell label="Origin">
+          <Tooltip text={device?.detail ? `Device ${device.detail}` : undefined}>
+            <span className="flex flex-col leading-tight whitespace-nowrap">
+              <span>
+                <span className="font-semibold">{sig('bin')?.value}</span>
+                <span className="ml-2 font-mono text-[12px] text-text-2">{sig('ip')?.value}</span>
+              </span>
+              {device && <span className="text-[11.5px] text-muted">Device: {device.value.toLowerCase()}</span>}
+            </span>
+          </Tooltip>
+        </Cell>
+      </div>
     </div>
   )
 }
