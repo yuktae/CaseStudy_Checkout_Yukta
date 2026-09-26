@@ -10,6 +10,7 @@
 from datetime import date
 
 from .models import Assessment
+from .text import tidy
 
 DOWNGRADE = {"satisfied": "partial", "partial": "missing"}
 LEVELS = {3: "High", 2: "Medium"}
@@ -177,7 +178,7 @@ def build_workup(case: dict, rule: dict, docs: list[dict], assessment: Assessmen
         requests = [f"{r['title']}: {r['gap']}" for r in applicable
                     if r["verdict"] in ("partial", "missing") and r["fixable"] and r["gap"]]
 
-    return {
+    return tidy({
         "case_id": case["case_id"],
         "rule": {k: rule[k] for k in ("key", "scheme", "code", "title", "category", "logic", "logic_label")}
                 | {"note": rule.get("note")},
@@ -192,4 +193,4 @@ def build_workup(case: dict, rule: dict, docs: list[dict], assessment: Assessmen
         "justification": assessment.justification,
         "rationale": assessment.rationale,
         "merchant_requests": requests,
-    }
+    })

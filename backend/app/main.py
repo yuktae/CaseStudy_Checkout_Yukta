@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ValidationError
 
 from . import db, documents, pipeline, rules
+from .text import tidy
 from .config import DEMO_ACCESS_CODE, MAX_FILE_MB, MAX_FILES, MODEL, STATIC_DIR, SEED_ON_START, UPLOAD_DIR, has_api_key
 from .models import CaseIn
 
@@ -77,7 +78,7 @@ def _detail(case_id: str, version: int | None = None) -> dict:
     if not case:
         raise HTTPException(404, "Case not found")
     all_cases = db.list_cases()
-    workup = db.get_workup(case_id, version)
+    workup = tidy(db.get_workup(case_id, version))
     latest = db.list_versions(case_id)
     previous = None
     if workup and workup["version"] > 1:

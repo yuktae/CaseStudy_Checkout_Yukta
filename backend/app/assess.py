@@ -52,8 +52,10 @@ the date checks are done in code.
 
 Writing:
 - allegation: what the issuer is alleging, in plain English. to_defend: what the scheme requires to defend it.
-- rationale: 3 to 5 sentences the analyst can file after light editing. State the claim, the decisive evidence with \
-specifics (dates, IDs, amounts), and the conclusion. No hedging filler, no bullet points.
+- rationale: 3 to 5 short points the analyst can file after light editing, one sentence per point, each on its own \
+line, without numbering or bullet characters. Cover the claim, the decisive evidence with specifics (dates, IDs, \
+amounts), and the conclusion. No hedging filler.
+- Write plainly: use commas or full stops, never em or en dashes.
 - justification: one line explaining the recommended action.
 - recommended_action: "represent" when the requirements are met under the code's logic; "request_more_evidence" when \
 there is a gap the merchant could fix; "accept_liability" when the case cannot be defended.

@@ -5,7 +5,7 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import { ACTION, ConfidenceMeter, SchemeBadge, VERDICT } from '../../components/status'
 import { Button, Card, SectionTitle } from '../../components/ui'
 import { useToast } from '../../components/toast'
-import { ACTION_LABEL, dateTime, sentenceCount } from '../../lib/format'
+import { ACTION_LABEL, dateTime } from '../../lib/format'
 import type { Action, Case, Verdict, Workup } from '../../lib/types'
 
 // ------------------------------------------------------------ 1. Reason
@@ -122,15 +122,19 @@ export function RationaleSection({ value, edited, aiChanged, writtenFor, recomme
   readOnly: boolean
 }) {
   const toast = useToast()
-  const n = sentenceCount(value)
+  const items = value.split('\n')
+  const n = items.filter((x) => x.trim()).length
   const inRange = n >= 3 && n <= 5
+  const setItem = (i: number, v: string) => onChange(items.map((x, j) => (j === i ? v.replace(/\n/g, ' ') : x)).join('\n'))
+  const removeItem = (i: number) => onChange(items.filter((_, j) => j !== i).join('\n'))
+  const addItem = () => onChange([...items.filter((x) => x.trim()), ''].join('\n'))
   return (
     <section>
       <SectionTitle
         index={3}
         right={
           <span className={clsx('rounded-md px-2 py-0.5 text-xs font-semibold', inRange ? 'bg-ok-soft text-ok' : 'bg-warn-soft text-warn')}>
-            {n} sentence{n === 1 ? '' : 's'}
+            {n} point{n === 1 ? '' : 's'}
           </span>
         }
       >
@@ -156,7 +160,29 @@ export function RationaleSection({ value, edited, aiChanged, writtenFor, recomme
             </button>
           </div>
         )}
-        <AutoTextarea value={value} onChange={onChange} disabled={readOnly} className="text-[14px] leading-relaxed text-text" />
+        <ol className="space-y-2">
+          {items.map((it, i) => (
+            <li key={i} className="group flex items-start gap-3">
+              <span className="mt-2 flex size-6 shrink-0 items-center justify-center rounded-full bg-blue-soft text-[12px] font-semibold text-blue">{i + 1}</span>
+              <AutoTextarea
+                value={it}
+                onChange={(v) => setItem(i, v)}
+                disabled={readOnly}
+                className="!border-transparent !bg-[#fafbfd] !px-3 !py-2 text-[14px] leading-relaxed text-text hover:!border-line focus:!border-blue"
+              />
+              {!readOnly && items.length > 1 && (
+                <button aria-label={`Remove point ${i + 1}`} onClick={() => removeItem(i)} className="mt-2.5 rounded p-1 text-muted opacity-0 transition-opacity group-hover:opacity-100 hover:text-bad">
+                  <X className="size-3.5" />
+                </button>
+              )}
+            </li>
+          ))}
+        </ol>
+        {!readOnly && (
+          <button onClick={addItem} className="mt-2 ml-9 flex items-center gap-1.5 rounded-md px-2 py-1 text-[12.5px] font-medium text-blue hover:bg-blue-soft">
+            <Plus className="size-3.5" /> Add a point
+          </button>
+        )}
         <div className="mt-3 flex items-center justify-between">
           <span className="text-xs text-muted">{edited ? 'Edited by you' : 'Drafted by AI, ready to edit'}</span>
           <div className="flex gap-1.5">
@@ -169,7 +195,11 @@ export function RationaleSection({ value, edited, aiChanged, writtenFor, recomme
               size="sm"
               variant="ghost"
               icon={<Copy className="size-3.5" />}
-              onClick={() => navigator.clipboard.writeText(value).then(() => toast('Rationale copied'))}
+              onClick={() =>
+                navigator.clipboard
+                  .writeText(items.filter((x) => x.trim()).map((x, i) => `${i + 1}. ${x.trim()}`).join('\n'))
+                  .then(() => toast('Rationale copied'))
+              }
             >
               Copy
             </Button>

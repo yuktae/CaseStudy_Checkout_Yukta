@@ -557,7 +557,11 @@ function AnalysisView({ detail, viewingOld }: { detail: CaseDetail; viewingOld: 
           </div>
           <div>
             <p className="mb-1 text-[11px] font-semibold tracking-wide text-muted uppercase">Rationale</p>
-            <p className="leading-relaxed text-text-2">{rationale}</p>
+            <ol className="list-decimal space-y-1 pl-5 leading-relaxed text-text-2">
+              {rationale.split('\n').filter((x) => x.trim()).map((x, i) => (
+                <li key={i}>{x}</li>
+              ))}
+            </ol>
           </div>
           {action === 'request_more_evidence' && (
             <div>
