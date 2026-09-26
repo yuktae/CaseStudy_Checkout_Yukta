@@ -1,0 +1,12 @@
+{
+  "CB-2025-0001": {"action": "represent", "acceptable": ["represent"]},
+  "CB-2025-0002": {"action": "accept_liability", "acceptable": ["accept_liability", "request_more_evidence"]},
+  "CB-2025-0003": {"action": "represent", "acceptable": ["represent"]},
+  "CB-2025-0004": {"action": "accept_liability", "acceptable": ["accept_liability"]},
+  "CB-2025-0005": {"action": "represent", "acceptable": ["represent"]},
+  "CB-2025-0006": {"action": "request_more_evidence", "acceptable": ["request_more_evidence"]},
+  "CB-2025-0007": {"action": "represent", "acceptable": ["represent"]},
+  "CB-2025-0008": {"action": "request_more_evidence", "acceptable": ["request_more_evidence", "accept_liability"]},
+  "CB-2025-0009": {"action": "represent", "acceptable": ["represent"]},
+  "CB-2025-0010": {"action": "accept_liability", "acceptable": ["accept_liability"]}
+}

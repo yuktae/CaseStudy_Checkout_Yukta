@@ -1,0 +1,358 @@
+{
+ "case_id": "CB-2025-0009",
+ "rule": {
+  "key": "mastercard:4859",
+  "scheme": "mastercard",
+  "code": "4859",
+  "title": "No-Show / Addendum",
+  "category": "Hospitality",
+  "logic": "ALL",
+  "logic_label": "All required",
+  "note": null
+ },
+ "summary": {
+  "allegation": "The cardholder disputes a 215.00 EUR charge from Hotel Marais Saint-Paul described as a no-show fee, asserting the charge is not valid.",
+  "to_defend": "The merchant must show the cardholder's booking, the no-show/cancellation policy disclosed at booking, proof the cardholder failed to show or cancelled late, and that the amount charged matches that policy."
+ },
+ "requirements": [
+  {
+   "id": "R1",
+   "title": "Original booking",
+   "text": "Evidence of the cardholder's original reservation or booking.",
+   "verdict": "satisfied",
+   "ai_verdict": "satisfied",
+   "finding": "Booking confirmation MSP-2025-4488 in the name of K. Adler shows a Classic Double for one night, check-in 26 April 2025, at 215.00 EUR paid by Mastercard ending 4421 — matching the disputed 215.00 EUR transaction at MCC 7011.",
+   "gap": "",
+   "fixable": false,
+   "citations": [
+    {
+     "page_id": "D1-p1",
+     "quote": "Booking reference\nMSP-2025-4488\nGuest name\nK. Adler",
+     "doc_key": "D1",
+     "page_no": 1,
+     "verified": true,
+     "match": "exact",
+     "rects": [
+      [
+       0.12661,
+       0.14352,
+       0.47982,
+       0.16185
+      ],
+      [
+       0.12661,
+       0.1649,
+       0.42352,
+       0.18323
+      ]
+     ],
+     "source": "text",
+     "relocated": false
+    },
+    {
+     "page_id": "D1-p1",
+     "quote": "Rate\n215.00 EUR (non-refundable)\nPayment\nMastercard **** 4421, charged at booking",
+     "doc_key": "D1",
+     "page_no": 1,
+     "verified": true,
+     "match": "exact",
+     "rects": [
+      [
+       0.12661,
+       0.29318,
+       0.56806,
+       0.31152
+      ],
+      [
+       0.12661,
+       0.31456,
+       0.6479,
+       0.3329
+      ]
+     ],
+     "source": "text",
+     "relocated": false
+    },
+    {
+     "page_id": "TXN",
+     "quote": "merchant_name: Hotel Marais Saint-Paul",
+     "doc_key": null,
+     "page_no": null,
+     "verified": true,
+     "match": "exact",
+     "rects": [],
+     "source": "txn",
+     "relocated": false
+    }
+   ],
+   "downgraded": null,
+   "date_check": null,
+   "vision_only": false
+  },
+  {
+   "id": "R2",
+   "title": "Policy disclosed at booking",
+   "text": "The merchant's no-show / cancellation policy as disclosed at booking.",
+   "verdict": "satisfied",
+   "ai_verdict": "satisfied",
+   "finding": "The cancellation policy document states the non-refundable rate is charged in full at booking with no refund for no-show, and records tick-box acceptance by the guest on 12 March 2025 at 09:14 CET under consent_id cns_4488a, the same date as the booking.",
+   "gap": "",
+   "fixable": false,
+   "citations": [
+    {
+     "page_id": "D2-p1",
+     "quote": "Non-refundable bookings are charged in full at the time of booking. No refund will be issued for cancellation, modification, no-show, or early departure.",
+     "doc_key": "D2",
+     "page_no": 1,
+     "verified": true,
+     "match": "exact",
+     "rects": [
+      [
+       0.12851,
+       0.18738,
+       0.83664,
+       0.20726
+      ],
+      [
+       0.12851,
+       0.20163,
+       0.54062,
+       0.22151
+      ]
+     ],
+     "source": "text",
+     "relocated": false
+    },
+    {
+     "page_id": "D2-p1",
+     "quote": "Guest accepted this policy on 12 March 2025 at 09:14 CET via tick-box consent on the booking page (consent_id: cns_4488a).",
+     "doc_key": "D2",
+     "page_no": 1,
+     "verified": true,
+     "match": "exact",
+     "rects": [
+      [
+       0.12851,
+       0.25627,
+       0.8404,
+       0.27615
+      ],
+      [
+       0.12851,
+       0.27052,
+       0.3642,
+       0.29041
+      ]
+     ],
+     "source": "text",
+     "relocated": false
+    }
+   ],
+   "downgraded": null,
+   "date_check": null,
+   "vision_only": false
+  },
+  {
+   "id": "R3",
+   "title": "No-show or late cancellation",
+   "text": "Evidence the cardholder either failed to show or cancelled outside the policy window.",
+   "verdict": "satisfied",
+   "ai_verdict": "satisfied",
+   "finding": "The front desk log for booking MSP-2025-4488 records the guest as an expected arrival at 15:00 on 26 April 2025, not arrived at 22:00 with no contact, and formally marked NO-SHOW at 00:30 on 27 April after the midnight cut-off. No cancellation was recorded at any point.",
+   "gap": "",
+   "fixable": false,
+   "citations": [
+    {
+     "page_id": "D3-p1",
+     "quote": "26 Apr 2025\n22:00\nGuest not arrived. No contact from guest.\nS. Bernard",
+     "doc_key": "D3",
+     "page_no": 1,
+     "verified": true,
+     "match": "exact",
+     "rects": [
+      [
+       0.07899,
+       0.20775,
+       0.86255,
+       0.22437
+      ]
+     ],
+     "source": "text",
+     "relocated": false
+    },
+    {
+     "page_id": "D3-p1",
+     "quote": "27 Apr 2025\n00:30\nRoom held until midnight cut-off per policy. Marked NO-SHOW.\nS. Bernard",
+     "doc_key": "D3",
+     "page_no": 1,
+     "verified": true,
+     "match": "exact",
+     "rects": [
+      [
+       0.07899,
+       0.22913,
+       0.86255,
+       0.24575
+      ]
+     ],
+     "source": "text",
+     "relocated": false
+    }
+   ],
+   "downgraded": null,
+   "date_check": null,
+   "vision_only": false
+  },
+  {
+   "id": "R4",
+   "title": "Fee matches policy",
+   "text": "Evidence the fee charged matches the policy disclosed.",
+   "verdict": "satisfied",
+   "ai_verdict": "satisfied",
+   "finding": "The policy provides for the full non-refundable rate to be retained on a no-show; the booked rate was 215.00 EUR and the disputed transaction is exactly 215.00 EUR, with the front desk log confirming the fee was retained per the non-refundable T&Cs.",
+   "gap": "",
+   "fixable": false,
+   "citations": [
+    {
+     "page_id": "D3-p1",
+     "quote": "27 Apr 2025\n07:15\nRoom released. No-show fee retained per non-refundable T&Cs.\nL. Dupont",
+     "doc_key": "D3",
+     "page_no": 1,
+     "verified": true,
+     "match": "exact",
+     "rects": [
+      [
+       0.07899,
+       0.25051,
+       0.85659,
+       0.26713
+      ]
+     ],
+     "source": "text",
+     "relocated": false
+    },
+    {
+     "page_id": "TXN",
+     "quote": "amount: 215.0 EUR",
+     "doc_key": null,
+     "page_no": null,
+     "verified": true,
+     "match": "exact",
+     "rects": [],
+     "source": "txn",
+     "relocated": false
+    }
+   ],
+   "downgraded": null,
+   "date_check": null,
+   "vision_only": false
+  }
+ ],
+ "score": {
+  "satisfied": 4,
+  "applicable": 4
+ },
+ "documents": [
+  {
+   "doc_key": "D1",
+   "filename": "CB-2025-0009_booking_confirmation.pdf",
+   "kind": "pdf",
+   "error": null,
+   "is_new": false,
+   "label": "Hotel booking confirmation MSP-2025-4488",
+   "relevance": "used",
+   "reason": "",
+   "pages": [
+    {
+     "page_no": 1,
+     "width": 595.2755737304688,
+     "height": 841.8897705078125,
+     "method": "text"
+    }
+   ],
+   "method": "text"
+  },
+  {
+   "doc_key": "D2",
+   "filename": "CB-2025-0009_cancellation_policy.pdf",
+   "kind": "pdf",
+   "error": null,
+   "is_new": false,
+   "label": "Non-refundable cancellation policy with consent",
+   "relevance": "used",
+   "reason": "",
+   "pages": [
+    {
+     "page_no": 1,
+     "width": 595.2755737304688,
+     "height": 841.8897705078125,
+     "method": "text"
+    }
+   ],
+   "method": "text"
+  },
+  {
+   "doc_key": "D3",
+   "filename": "CB-2025-0009_front_desk_log.pdf",
+   "kind": "pdf",
+   "error": null,
+   "is_new": false,
+   "label": "Front desk log showing no-show",
+   "relevance": "used",
+   "reason": "",
+   "pages": [
+    {
+     "page_no": 1,
+     "width": 595.2755737304688,
+     "height": 841.8897705078125,
+     "method": "text"
+    }
+   ],
+   "method": "text"
+  }
+ ],
+ "alerts": [
+  {
+   "type": "inconsistency",
+   "severity": "info",
+   "text": "D1 states the 215.00 EUR was \"charged at booking\" on 12 March 2025, but the transaction record dates the 215.00 EUR authorisation/settlement to 2025-04-26T11:00Z (the stay date). The amount and card match, but the merchant should explain the charge-date discrepancy if the issuer raises it."
+  }
+ ],
+ "key_dates": [
+  {
+   "label": "service",
+   "date": "2025-04-26",
+   "page_id": "D1-p1"
+  },
+  {
+   "label": "other",
+   "date": "2025-04-27",
+   "page_id": "D3-p1"
+  },
+  {
+   "label": "other",
+   "date": "2025-03-12",
+   "page_id": "D2-p1"
+  }
+ ],
+ "decision": {
+  "action": "represent",
+  "code_action": "represent",
+  "ai_action": "represent",
+  "needs_judgement": false,
+  "confidence": {
+   "level": "High",
+   "score": 3,
+   "reasons": [
+    "Every requirement the decision relies on is backed by verified evidence"
+   ],
+   "notes": [
+    "1 data inconsistency to check"
+   ]
+  }
+ },
+ "justification": "All four requirements are supported by matching booking, policy acceptance, no-show log and an exact amount match, on a fully 3DS-authenticated transaction.",
+ "rationale": "The cardholder disputes a 215.00 EUR no-show fee from Hotel Marais Saint-Paul (txn_9967QR). The merchant has produced booking confirmation MSP-2025-4488 in the name of K. Adler for a Classic Double on 26-27 April 2025 at a non-refundable rate of 215.00 EUR paid on Mastercard ending 4421, together with the cancellation policy the guest accepted by tick-box on 12 March 2025 at 09:14 CET (consent_id cns_4488a), which expressly provides that no refund is issued for a no-show. The front desk log for the same booking reference records the guest as not arrived at 22:00 on 26 April with no contact, marked NO-SHOW at 00:30 on 27 April after the midnight cut-off, and the room released at 07:15 with the fee retained per the non-refundable terms. The amount retained equals the full booked rate of 215.00 EUR, exactly matching the disputed transaction, which was 3DS-authenticated with AVS 'Y' and CVV 'M'. The no-show fee was validly assessed in line with the policy disclosed and accepted at booking; the chargeback should be represented.",
+ "merchant_requests": [],
+ "model": "claude-opus-5"
+}

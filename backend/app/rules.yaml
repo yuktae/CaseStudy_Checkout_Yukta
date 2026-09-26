@@ -1,0 +1,257 @@
+# Structured version of data/reason_codes.md (simplified exercise rules).
+# logic:
+#   ALL          every applicable requirement must be satisfied
+#   ANY_TWO      at least two requirements satisfied
+#   ANY_ONE      at least one requirement satisfied
+#   EITHER       one of the alternative branches satisfied
+#   AUTO_ACCEPT  not representable unless requirement R1 is proven
+# date_check: code compares the extracted delivery/service date with the chargeback date.
+# applies_to: "services" marks a requirement that only applies to services.
+
+visa:10.4:
+  title: Other Fraud, Card Absent Environment
+  category: Fraud
+  logic: ANY_TWO
+  allegation: Cardholder denies authorising a card-not-present transaction.
+  requirements:
+    - id: R1
+      title: Two prior undisputed transactions
+      text: Evidence the cardholder used the same card and same shipping address in two prior undisputed transactions with this merchant, completed more than 120 days but less than 365 days before the disputed transaction.
+    - id: R2
+      title: Cardholder using the merchandise
+      text: Evidence the cardholder is in possession of and using the merchandise (e.g. signed-in account activity post-delivery, social media post tagging the merchant).
+    - id: R3
+      title: Digital goods identity match
+      text: "For digital goods: device fingerprint, IP address, geolocation, and customer account login matching prior undisputed transactions."
+    - id: R4
+      title: Signed delivery to billing address
+      text: Proof of delivery to the cardholder's verified billing address (not just shipping address) with signature confirmation.
+
+visa:10.5:
+  title: Visa Fraud Monitoring Program
+  category: Fraud monitoring
+  logic: AUTO_ACCEPT
+  allegation: Transaction flagged under Visa's fraud monitoring program.
+  note: This reason code generally cannot be represented. Recommend accepting liability unless the merchant can prove the transaction was miscoded by the issuer.
+  requirements:
+    - id: R1
+      title: Proof the issuer miscoded the chargeback
+      text: Evidence that the transaction was miscoded by the issuer under the Visa Fraud Monitoring Program.
+
+visa:12.5:
+  title: Incorrect Amount
+  category: Processing error
+  logic: ALL
+  allegation: The amount charged does not match the amount the cardholder authorised.
+  requirements:
+    - id: R1
+      title: Agreed amount documented
+      text: The signed receipt, terms of service, or order confirmation showing the amount the cardholder agreed to.
+    - id: R2
+      title: Charged amount matches
+      text: Documentation showing the amount charged matches that agreed amount.
+    - id: R3
+      title: Adjustment authorised
+      text: If a tip, gratuity, or adjustment was added, evidence the cardholder authorised it.
+
+visa:12.6.1:
+  title: Duplicate Processing
+  category: Processing error
+  logic: ALL
+  allegation: The same transaction was processed more than once.
+  requirements:
+    - id: R1
+      title: Two separate purchases
+      text: Evidence the two transactions are for two separate purchases (e.g. different order IDs, different items, different services rendered).
+    - id: R2
+      title: Each purchase documented
+      text: Documentation of each purchase event (separate invoices, separate delivery confirmations, separate service dates).
+    - id: R3
+      title: Timestamps and auth codes
+      text: Transaction timestamps and authorisation codes for each charge.
+
+visa:13.1:
+  title: Merchandise / Services Not Received
+  category: Not received
+  logic: ALL
+  allegation: Cardholder paid but never received the goods or services.
+  requirements:
+    - id: R1
+      title: Proof of delivery
+      text: "Proof of delivery: tracking number, carrier name, and confirmation of delivery to the cardholder's address."
+    - id: R2
+      title: Service rendered
+      text: "For services: evidence the service was rendered on or before the expected date (booking confirmation, attendance log, access logs)."
+      applies_to: services
+    - id: R3
+      title: Delivered before chargeback date
+      text: Date of delivery / service rendered is on or before the chargeback date.
+      date_check: true
+    - id: R4
+      title: Delivery address matches
+      text: The delivery address materially matches the address provided by the cardholder at purchase.
+
+visa:13.2:
+  title: Cancelled Recurring Transaction
+  category: Cancellation
+  logic: ALL
+  allegation: Cardholder cancelled a recurring subscription but was still charged.
+  requirements:
+    - id: R1
+      title: Recurring terms disclosed
+      text: Terms of service disclosing the recurring billing arrangement and the cancellation method.
+    - id: R2
+      title: Pre-charge notification sent
+      text: Evidence the cardholder was notified of the upcoming charge (typically 7 days in advance) for transactions over a defined threshold.
+    - id: R3
+      title: No cancellation before billing
+      text: No record of the cardholder having submitted a cancellation request prior to the billing date.
+    - id: R4
+      title: Original opt-in
+      text: Evidence of the cardholder's original opt-in to the recurring arrangement.
+
+visa:13.3:
+  title: Not as Described or Defective Merchandise
+  category: Not as described
+  logic: ALL
+  allegation: Cardholder received the goods but they are materially not as described or defective.
+  requirements:
+    - id: R1
+      title: Published item description
+      text: The merchant's published description of the item the cardholder purchased.
+    - id: R2
+      title: Delivered item matches description
+      text: Evidence the item delivered matches that description (photos, specs, serial number match).
+    - id: R3
+      title: Return route offered and unused
+      text: Evidence the merchant offered a return/refund route and the cardholder did not use it, OR evidence the cardholder used and retained the merchandise after raising the complaint.
+
+visa:13.6:
+  title: Credit Not Processed
+  category: Processing error
+  logic: EITHER
+  allegation: The merchant agreed to a refund but never processed it.
+  requirements:
+    - id: R1
+      title: Refund processed
+      text: Evidence that a refund was processed (refund transaction ID, date, amount).
+    - id: R2
+      title: No refund was agreed
+      text: Evidence that no refund was ever agreed (merchant's refund policy and absence of any refund commitment in cardholder communications).
+
+visa:13.7:
+  title: Cancelled Merchandise / Services
+  category: Cancellation
+  logic: ALL
+  allegation: Cardholder cancelled the purchase per the merchant's policy but was charged.
+  requirements:
+    - id: R1
+      title: Cancellation policy at point of sale
+      text: The merchant's cancellation policy as displayed at point of sale.
+    - id: R2
+      title: Cardholder agreed to policy
+      text: Evidence the cardholder agreed to that policy (e.g. checkbox click record, signed terms).
+    - id: R3
+      title: Cancelled outside policy window
+      text: Evidence the cardholder either did not cancel within the policy window, or cancelled outside the refundable period.
+
+mastercard:4837:
+  title: No Cardholder Authorisation
+  category: Fraud
+  logic: ANY_TWO
+  allegation: Cardholder denies authorising the transaction (card-not-present fraud equivalent).
+  requirements:
+    - id: R1
+      title: AVS and CVV match
+      text: AVS match (full address) AND CVV match on the disputed transaction.
+    - id: R2
+      title: 3DS authenticated
+      text: 3D Secure authentication completed successfully (Mastercard SecureCode / Identity Check).
+    - id: R3
+      title: Two prior undisputed transactions
+      text: Two prior undisputed transactions from the same cardholder with this merchant in the past 12 months, with matching billing details.
+    - id: R4
+      title: Signed delivery to billing address
+      text: Proof of delivery to the cardholder's billing address with signature.
+
+mastercard:4853:
+  title: Cardholder Dispute (Goods / Services Not Provided)
+  category: Not as described
+  logic: ALL
+  allegation: Goods or services were not provided as agreed.
+  requirements:
+    - id: R1
+      title: Proof of delivery or service
+      text: Proof of delivery or service provision (tracking, confirmation, access log).
+    - id: R2
+      title: Matches what was advertised
+      text: Evidence the goods or services materially match what was advertised.
+    - id: R3
+      title: Resolution attempted or not sought
+      text: "Either: no contact from the cardholder attempting to resolve the issue before the chargeback, OR documentation showing the merchant attempted resolution and the cardholder refused."
+
+mastercard:4855:
+  title: Goods / Services Not Provided
+  category: Not received
+  logic: ALL
+  allegation: Paid for goods or services that were never delivered or rendered.
+  requirements:
+    - id: R1
+      title: Proof of delivery or service
+      text: Proof of delivery (tracking + carrier confirmation) or proof of service rendered (access logs, attendance, completed booking).
+    - id: R2
+      title: Before chargeback date
+      text: Date of delivery / service is before the chargeback date.
+      date_check: true
+    - id: R3
+      title: Address matches cardholder records
+      text: Delivery address matches the cardholder's records.
+
+mastercard:4863:
+  title: Cardholder Does Not Recognise (Potential Fraud)
+  category: Fraud
+  logic: ANY_ONE
+  allegation: Cardholder does not recognise the transaction (may not actually be fraud; could just be a confusing descriptor).
+  requirements:
+    - id: R1
+      title: Recognisable billing descriptor
+      text: Evidence the merchant's billing descriptor matches the merchant name the cardholder would recognise.
+    - id: R2
+      title: AVS and CVV match
+      text: AVS + CVV match on the disputed transaction.
+    - id: R3
+      title: Prior undisputed transactions
+      text: Prior undisputed transactions from the same cardholder with this merchant.
+    - id: R4
+      title: IP, device or login match
+      text: Cardholder's IP / device / account login matching prior undisputed sessions.
+
+mastercard:4859:
+  title: No-Show / Addendum
+  category: Hospitality
+  logic: ALL
+  allegation: Cardholder was charged a no-show fee, late cancellation fee, or addendum charge (common in hospitality, car rental, travel) that they dispute.
+  requirements:
+    - id: R1
+      title: Original booking
+      text: Evidence of the cardholder's original reservation or booking.
+    - id: R2
+      title: Policy disclosed at booking
+      text: The merchant's no-show / cancellation policy as disclosed at booking.
+    - id: R3
+      title: No-show or late cancellation
+      text: Evidence the cardholder either failed to show or cancelled outside the policy window.
+    - id: R4
+      title: Fee matches policy
+      text: Evidence the fee charged matches the policy disclosed.
+
+mastercard:4870:
+  title: Chip Liability Shift
+  category: Fraud
+  logic: AUTO_ACCEPT
+  allegation: Counterfeit card used at a non-chip-enabled terminal (card-present only).
+  note: Card-present reason code. For a card-not-present acquiring context, accept liability and flag the merchant for a terminal upgrade.
+  requirements:
+    - id: R1
+      title: Chip-enabled terminal used
+      text: Evidence the transaction was processed on a chip-enabled terminal (which would remove the liability shift).

@@ -1,0 +1,83 @@
+@import 'tailwindcss';
+
+/* Design tokens: white surfaces, blue as the single accent, black for the app bar and primary actions.
+   Status colours are only ever used together with an icon and a label. */
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --color-canvas: #f3f5fa;
+  --color-surface: #ffffff;
+  --color-ink: #0b0d12;
+  --color-ink-2: #1c2130;
+  --color-text: #111827;
+  --color-text-2: #4b5563;
+  --color-muted: #8a93a6;
+  --color-line: #e6e9f0;
+  --color-line-2: #eef1f6;
+
+  --color-blue: #2563eb;
+  --color-blue-dark: #1d4ed8;
+  --color-blue-soft: #eef3ff;
+  --color-blue-line: #d6e2fe;
+
+  --color-ok: #15803d;
+  --color-ok-soft: #e9f7ee;
+  --color-warn: #b45309;
+  --color-warn-soft: #fef5e6;
+  --color-bad: #c2261d;
+  --color-bad-soft: #fdeeed;
+  --color-judge: #6d28d9;
+  --color-judge-soft: #f3edff;
+  --color-highlight: #ffd84d;
+
+  --radius-card: 16px;
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.04);
+  --shadow-pop: 0 10px 30px -10px rgb(16 24 40 / 0.25), 0 2px 6px rgb(16 24 40 / 0.06);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'cv11', 'ss01';
+}
+
+::selection {
+  background: var(--color-blue-line);
+}
+
+/* Quiet scrollbars inside panes */
+.pane-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cfd5e1 transparent;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

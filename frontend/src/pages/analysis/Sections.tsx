@@ -1,0 +1,377 @@
+import clsx from 'clsx'
+import { AnimatePresence, motion } from 'framer-motion'
+import { ChevronDown, Copy, History, Mail, MessageSquareQuote, Plus, RotateCcw, Scale, Sparkles, X } from 'lucide-react'
+import { useLayoutEffect, useRef, useState } from 'react'
+import { ACTION, ConfidenceMeter, SchemeBadge } from '../../components/status'
+import { Button, Card, SectionTitle } from '../../components/ui'
+import { useToast } from '../../components/toast'
+import { ACTION_LABEL, dateTime, sentenceCount } from '../../lib/format'
+import type { Action, Case, Workup } from '../../lib/types'
+
+// ------------------------------------------------------------ 1. Reason
+
+export function ReasonSection({ workup, kase }: { workup: Workup; kase: Case }) {
+  const [showNarrative, setShowNarrative] = useState(false)
+  return (
+    <section>
+      <SectionTitle index={1}>Reason code</SectionTitle>
+      <Card className="p-5">
+        <div className="flex items-center gap-2.5">
+          <SchemeBadge scheme={kase.scheme} code={kase.reason_code} />
+          <span className="text-[14px] font-semibold">{workup.rule.title}</span>
+          <span className="ml-auto rounded-md bg-line-2 px-2 py-0.5 text-[11px] font-medium text-text-2">{workup.rule.category}</span>
+        </div>
+        <dl className="mt-4 grid gap-3.5 text-[13.5px] leading-relaxed">
+          <div>
+            <dt className="mb-0.5 text-[11px] font-semibold tracking-wide text-muted uppercase">Allegation</dt>
+            <dd className="text-text">{workup.summary.allegation}</dd>
+          </div>
+          <div>
+            <dt className="mb-0.5 flex items-center gap-2 text-[11px] font-semibold tracking-wide text-muted uppercase">
+              To defend
+              <span className="rounded bg-blue-soft px-1.5 py-px text-[10px] tracking-normal text-blue normal-case">{workup.rule.logic_label}</span>
+            </dt>
+            <dd className="text-text">{workup.summary.to_defend}</dd>
+          </div>
+          {workup.rule.note && <dd className="rounded-lg bg-judge-soft px-3 py-2 text-[13px] text-judge">{workup.rule.note}</dd>}
+        </dl>
+        <button
+          onClick={() => setShowNarrative((s) => !s)}
+          className="mt-4 flex items-center gap-1.5 text-[12.5px] font-medium text-blue hover:text-blue-dark"
+        >
+          <MessageSquareQuote className="size-4" />
+          Issuer narrative
+          <ChevronDown className={clsx('size-3.5 transition-transform', showNarrative && 'rotate-180')} />
+        </button>
+        <AnimatePresence initial={false}>
+          {showNarrative && (
+            <motion.blockquote
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <p className="mt-2 border-l-2 border-blue-line pl-3 text-[13px] leading-relaxed text-text-2 italic">{kase.issuer_narrative}</p>
+            </motion.blockquote>
+          )}
+        </AnimatePresence>
+      </Card>
+    </section>
+  )
+}
+
+// --------------------------------------------------------- 3. Rationale
+
+export function AutoTextarea({ value, onChange, disabled, className }: { value: string; onChange: (v: string) => void; disabled?: boolean; className?: string }) {
+  const ref = useRef<HTMLTextAreaElement>(null)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }, [value])
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      disabled={disabled}
+      onChange={(e) => onChange(e.target.value)}
+      rows={1}
+      className={clsx('w-full resize-none overflow-hidden rounded-xl border border-line bg-surface px-4 py-3 outline-none transition-colors focus:border-blue focus:ring-4 focus:ring-blue/10 disabled:bg-[#fafbfd]', className)}
+    />
+  )
+}
+
+export function RationaleSection({ value, edited, aiChanged, writtenFor, recommended, onChange, onReset, readOnly }: {
+  value: string
+  edited: boolean
+  aiChanged: boolean
+  writtenFor: Action
+  recommended: Action
+  onChange: (v: string) => void
+  onReset: () => void
+  readOnly: boolean
+}) {
+  const toast = useToast()
+  const n = sentenceCount(value)
+  const inRange = n >= 3 && n <= 5
+  return (
+    <section>
+      <SectionTitle
+        index={3}
+        right={
+          <span className={clsx('rounded-md px-2 py-0.5 text-xs font-semibold', inRange ? 'bg-ok-soft text-ok' : 'bg-warn-soft text-warn')}>
+            {n} sentence{n === 1 ? '' : 's'}
+          </span>
+        }
+      >
+        Representment rationale
+      </SectionTitle>
+      <Card className="p-5">
+        {writtenFor !== recommended && !edited && (
+          <div className="mb-3 flex items-start gap-2 rounded-lg bg-judge-soft px-3 py-2 text-[12.5px] text-judge">
+            <Scale className="mt-px size-4 shrink-0" />
+            <span>
+              This draft argues for <span className="font-semibold">{ACTION_LABEL[writtenFor]}</span>, the AI's view. The rule check recommends{' '}
+              <span className="font-semibold">{ACTION_LABEL[recommended]}</span>. Edit before filing.
+            </span>
+          </div>
+        )}
+        {aiChanged && (
+          <div className="mb-3 flex items-center justify-between gap-3 rounded-lg bg-blue-soft px-3 py-2 text-[12.5px] text-blue">
+            <span className="flex items-center gap-2">
+              <Sparkles className="size-4" /> The AI suggests a different version after re-analysis.
+            </span>
+            <button onClick={onReset} className="font-semibold hover:underline">
+              Use AI version
+            </button>
+          </div>
+        )}
+        <AutoTextarea value={value} onChange={onChange} disabled={readOnly} className="text-[14px] leading-relaxed text-text" />
+        <div className="mt-3 flex items-center justify-between">
+          <span className="text-xs text-muted">{edited ? 'Edited by you' : 'Drafted by AI, ready to edit'}</span>
+          <div className="flex gap-1.5">
+            {edited && !readOnly && (
+              <Button size="sm" variant="ghost" icon={<RotateCcw className="size-3.5" />} onClick={onReset}>
+                Reset to AI
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="ghost"
+              icon={<Copy className="size-3.5" />}
+              onClick={() => navigator.clipboard.writeText(value).then(() => toast('Rationale copied'))}
+            >
+              Copy
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </section>
+  )
+}
+
+// ------------------------------------------------------ 4. Recommended action
+
+export function ActionSection({ workup, action, onAction, reason, onReason, justification, onJustification, justificationEdited, onResetJustification, readOnly }: {
+  workup: Workup
+  action: Action
+  onAction: (a: Action) => void
+  reason: string
+  onReason: (v: string) => void
+  justification: string
+  onJustification: (v: string) => void
+  justificationEdited: boolean
+  onResetJustification: () => void
+  readOnly: boolean
+}) {
+  const d = workup.decision
+  const changed = action !== d.action
+  const options: Action[] = ['represent', 'request_more_evidence', 'accept_liability']
+  return (
+    <section>
+      <SectionTitle index={4}>Recommended action</SectionTitle>
+      <div className="overflow-hidden rounded-[var(--radius-card)] border border-blue/20 bg-gradient-to-br from-blue to-[#1b3fb8] p-5 text-white shadow-[0_12px_30px_-16px_rgb(37_99_235/0.8)]">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <ConfidenceMeter level={d.confidence.level} light />
+          {d.needs_judgement && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-xs font-semibold">
+              <Scale className="size-3.5" /> Needs judgement
+            </span>
+          )}
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-white/10 p-1">
+          {options.map((a) => {
+            const meta = ACTION[a]
+            const selected = a === action
+            return (
+              <button
+                key={a}
+                disabled={readOnly}
+                onClick={() => onAction(a)}
+                className={clsx(
+                  'relative flex flex-col items-center gap-1 rounded-lg px-2 py-2.5 text-[12.5px] font-semibold transition-colors',
+                  selected ? 'text-ink' : 'text-white/80 hover:text-white',
+                )}
+              >
+                {selected && <motion.span layoutId="action-pick" className="absolute inset-0 rounded-lg bg-white shadow" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
+                <meta.icon className={clsx('relative size-5', selected && meta.cls.split(' ')[1])} />
+                <span className="relative">{ACTION_LABEL[a]}</span>
+                {a === d.action && <span className={clsx('relative text-[10px] font-medium', selected ? 'text-muted' : 'text-white/60')}>Recommended</span>}
+              </button>
+            )
+          })}
+        </div>
+
+        {d.needs_judgement && (
+          <div className="mt-3 grid grid-cols-2 gap-2 text-[12.5px]">
+            <div className="rounded-lg bg-white/10 px-3 py-2">
+              <p className="text-white/60">Rule check</p>
+              <p className="font-semibold">{ACTION_LABEL[d.code_action]}</p>
+            </div>
+            <div className="rounded-lg bg-white/10 px-3 py-2">
+              <p className="text-white/60">AI review</p>
+              <p className="font-semibold">{ACTION_LABEL[d.ai_action]}</p>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-4">
+          <label className="mb-1.5 flex items-center justify-between text-[11px] font-semibold tracking-wide text-white/60 uppercase">
+            Justification
+            {justificationEdited && !readOnly && (
+              <button onClick={onResetJustification} className="font-medium tracking-normal normal-case hover:text-white">
+                Reset to AI
+              </button>
+            )}
+          </label>
+          <AutoTextarea
+            value={justification}
+            disabled={readOnly}
+            onChange={onJustification}
+            className="!rounded-lg !border-white/15 !bg-white/10 !px-3 !py-2 text-[13.5px] leading-snug !text-white focus:!border-white/40 focus:!ring-white/10"
+          />
+        </div>
+
+        <AnimatePresence initial={false}>
+          {changed && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+              <label className="mt-3 mb-1.5 block text-[11px] font-semibold tracking-wide text-white/60 uppercase">Why are you changing the recommendation?</label>
+              <input
+                value={reason}
+                disabled={readOnly}
+                onChange={(e) => onReason(e.target.value)}
+                placeholder="Required when you override the AI"
+                className="w-full rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-[13.5px] text-white outline-none placeholder:text-white/50 focus:border-white/40"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <ul className="mt-4 space-y-1 border-t border-white/15 pt-3 text-[12.5px] text-white/80">
+          {d.confidence.reasons.map((r) => (
+            <li key={r} className="flex gap-2">
+              <span className="mt-[7px] size-1 shrink-0 rounded-full bg-white/60" />
+              {r}
+            </li>
+          ))}
+          {d.confidence.notes?.map((r) => (
+            <li key={r} className="flex gap-2 text-white/60">
+              <span className="mt-[7px] size-1 shrink-0 rounded-full bg-white/40" />
+              {r}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )
+}
+
+// ------------------------------------------------------ 5. Merchant requests
+
+export function RequestsSection({ items, onChange, edited, onReset, kase, readOnly }: {
+  items: string[]
+  onChange: (items: string[]) => void
+  edited: boolean
+  onReset: () => void
+  kase: Case
+  readOnly: boolean
+}) {
+  const toast = useToast()
+  const [draft, setDraft] = useState('')
+  const email = () => {
+    const lines = items.map((it, i) => `${i + 1}. ${it}`).join('\n')
+    const text = `Subject: Additional evidence needed for chargeback ${kase.case_id}\n\nHello ${kase.transaction.merchant_name} team,\n\nTo represent chargeback ${kase.case_id} (transaction ${kase.transaction.transaction_id}), we need the following:\n\n${lines}\n\nPlease reply with these documents as soon as possible so we can respond within the scheme deadline.\n\nThank you,\nDisputes team`
+    navigator.clipboard.writeText(text).then(() => toast('Email copied to clipboard'))
+  }
+  return (
+    <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+      <SectionTitle index={5}>Ask the merchant for</SectionTitle>
+      <Card className="p-5">
+        {items.length === 0 && <p className="text-[13px] text-muted">No requests yet. Add what the merchant needs to provide.</p>}
+        <ol className="space-y-2">
+          <AnimatePresence initial={false}>
+            {items.map((it, i) => (
+              <motion.li key={`${i}-${it}`} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="group flex items-start gap-3 rounded-lg px-1 py-1">
+                <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-warn-soft text-[11px] font-semibold text-warn">{i + 1}</span>
+                <AutoTextarea
+                  value={it}
+                  disabled={readOnly}
+                  onChange={(v) => onChange(items.map((x, j) => (j === i ? v : x)))}
+                  className="!rounded-md !border-transparent !bg-transparent !px-1 !py-0.5 text-[13.5px] leading-snug text-text focus:!bg-line-2 focus:!ring-0"
+                />
+                {!readOnly && (
+                  <button aria-label="Remove request" onClick={() => onChange(items.filter((_, j) => j !== i))} className="rounded p-1 text-muted opacity-0 transition-opacity group-hover:opacity-100 hover:text-bad">
+                    <X className="size-3.5" />
+                  </button>
+                )}
+              </motion.li>
+            ))}
+          </AnimatePresence>
+        </ol>
+        {!readOnly && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (draft.trim()) onChange([...items, draft.trim()])
+              setDraft('')
+            }}
+            className="mt-3 flex items-center gap-2"
+          >
+            <input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder="Add a request"
+              className="h-9 flex-1 rounded-lg border border-line px-3 text-[13px] outline-none focus:border-blue"
+            />
+            <Button size="sm" type="submit" icon={<Plus className="size-3.5" />}>
+              Add
+            </Button>
+          </form>
+        )}
+        <div className="mt-4 flex items-center justify-between border-t border-line-2 pt-3">
+          <span className="text-xs text-muted">{edited ? 'Edited by you' : 'Drafted by AI'}</span>
+          <div className="flex gap-1.5">
+            {edited && !readOnly && (
+              <Button size="sm" variant="ghost" icon={<RotateCcw className="size-3.5" />} onClick={onReset}>
+                Reset to AI
+              </Button>
+            )}
+            <Button size="sm" variant="secondary" icon={<Mail className="size-3.5" />} onClick={email} disabled={!items.length}>
+              Copy as email
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </motion.section>
+  )
+}
+
+// --------------------------------------------------------------- Activity
+
+export function ActivitySection({ activity, model }: { activity: { text: string; created_at: string }[]; model: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <section>
+      <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-2 text-[13px] font-medium text-text-2 hover:text-text">
+        <History className="size-4" /> Activity
+        <ChevronDown className={clsx('size-3.5 transition-transform', open && 'rotate-180')} />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.ul initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="mt-2 overflow-hidden">
+            {activity.map((a, i) => (
+              <li key={i} className="flex justify-between gap-4 border-b border-line-2 py-2 text-[12.5px] last:border-0">
+                <span className="text-text-2">{a.text}</span>
+                <span className="text-muted tabular">{dateTime(a.created_at)}</span>
+              </li>
+            ))}
+            <li className="py-2 text-[12px] text-muted">Analysis model: {model}</li>
+          </motion.ul>
+        )}
+      </AnimatePresence>
+    </section>
+  )
+}

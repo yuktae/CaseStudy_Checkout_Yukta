@@ -1,0 +1,7 @@
+# Keep source files with LF endings; never touch binary evidence files.
+* text=auto eol=lf
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary

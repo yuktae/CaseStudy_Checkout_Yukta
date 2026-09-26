@@ -1,0 +1,294 @@
+{
+ "case_id": "CB-2025-0007",
+ "rule": {
+  "key": "mastercard:4855",
+  "scheme": "mastercard",
+  "code": "4855",
+  "title": "Goods / Services Not Provided",
+  "category": "Not received",
+  "logic": "ALL",
+  "logic_label": "All required",
+  "note": null
+ },
+ "summary": {
+  "allegation": "The cardholder says they paid TerraFreight Logistics £412.75 for a freight shipment to be collected and delivered, that the shipment was never collected, and that no service was ever provided.",
+  "to_defend": "The merchant must show proof the service was actually rendered, dated before the 14 May 2025 chargeback, to an address matching the cardholder's records."
+ },
+ "requirements": [
+  {
+   "id": "R1",
+   "title": "Proof of delivery or service",
+   "text": "Proof of delivery (tracking + carrier confirmation) or proof of service rendered (access logs, attendance, completed booking).",
+   "verdict": "satisfied",
+   "ai_verdict": "satisfied",
+   "finding": "The merchant's operational manifest ties consignment TF-9051 directly to this transaction reference (txn_7745MN), recording collection from LS1 4DT at 11:30 on 22 April 2025 and delivery to LS9 8AA at 17:14 the same day, signed for by warehouse staff with a POD image reference (POD-9051-img). The POD image itself is not attached, but the completed-movement record identifies this transaction and meets the wording.",
+   "gap": "",
+   "fixable": false,
+   "citations": [
+    {
+     "page_id": "D1-p8",
+     "quote": "Consignment TF-9051 (Stentor Bros, ref txn_7745MN): Collected from LS1 4DT at 11:30 on 22 April 2025 and delivered to LS9 8AA at 17:14 the same day.",
+     "doc_key": "D1",
+     "page_no": 8,
+     "verified": true,
+     "match": "exact",
+     "rects": [
+      [
+       0.12851,
+       0.23964,
+       0.86172,
+       0.25962
+      ],
+      [
+       0.12851,
+       0.25389,
+       0.57992,
+       0.27378
+      ]
+     ],
+     "source": "text",
+     "relocated": false
+    },
+    {
+     "page_id": "D1-p8",
+     "quote": "TF-9051\nStentor Bros\nLS1 4DT\nLS9 8AA\nDELIVERED 22 Apr 17:14\nPOD-9051-img",
+     "doc_key": "D1",
+     "page_no": 8,
+     "verified": true,
+     "match": "exact",
+     "rects": [
+      [
+       0.1028,
+       0.13657,
+       0.8672,
+       0.15156
+      ]
+     ],
+     "source": "text",
+     "relocated": false
+    }
+   ],
+   "downgraded": null,
+   "date_check": null,
+   "vision_only": false
+  },
+  {
+   "id": "R2",
+   "title": "Before chargeback date",
+   "text": "Date of delivery / service is before the chargeback date.",
+   "verdict": "satisfied",
+   "ai_verdict": "satisfied",
+   "finding": "The manifest records delivery of TF-9051 on 22 April 2025, the same day as the 22 April 2025 transaction and well ahead of the 14 May 2025 chargeback.",
+   "gap": "",
+   "fixable": false,
+   "citations": [
+    {
+     "page_id": "D1-p8",
+     "quote": "delivered to LS9 8AA at 17:14 the same day. Signed for by warehouse staff at\ndestination. POD image on file.",
+     "doc_key": "D1",
+     "page_no": 8,
+     "verified": true,
+     "match": "exact",
+     "rects": [
+      [
+       0.2415,
+       0.25389,
+       0.8255,
+       0.27378
+      ],
+      [
+       0.12851,
+       0.26815,
+       0.36511,
+       0.28803
+      ]
+     ],
+     "source": "text",
+     "relocated": false
+    }
+   ],
+   "downgraded": null,
+   "date_check": {
+    "ok": true,
+    "detail": "22 Apr 2025 vs chargeback 14 May 2025"
+   },
+   "vision_only": false
+  },
+  {
+   "id": "R3",
+   "title": "Address matches cardholder records",
+   "text": "Delivery address matches the cardholder's records.",
+   "verdict": "satisfied",
+   "ai_verdict": "satisfied",
+   "finding": "The collection postcode LS1 4DT matches the cardholder's billing postcode and the delivery postcode LS9 8AA matches the shipping postcode on the authorisation record; the transaction also passed AVS, CVV and 3DS authentication.",
+   "gap": "",
+   "fixable": false,
+   "citations": [
+    {
+     "page_id": "D1-p8",
+     "quote": "Collected from LS1 4DT at 11:30 on 22\nApril 2025 and delivered to LS9 8AA at 17:14",
+     "doc_key": "D1",
+     "page_no": 8,
+     "verified": true,
+     "match": "exact",
+     "rects": [
+      [
+       0.56535,
+       0.23964,
+       0.86172,
+       0.25952
+      ],
+      [
+       0.12851,
+       0.25389,
+       0.46973,
+       0.27378
+      ]
+     ],
+     "source": "text",
+     "relocated": false
+    },
+    {
+     "page_id": "TXN",
+     "quote": "billing_address_postcode: LS1 4DT\nshipping_address_postcode: LS9 8AA",
+     "doc_key": null,
+     "page_no": null,
+     "verified": true,
+     "match": "exact",
+     "rects": [],
+     "source": "txn",
+     "relocated": false
+    }
+   ],
+   "downgraded": null,
+   "date_check": null,
+   "vision_only": false
+  }
+ ],
+ "score": {
+  "satisfied": 3,
+  "applicable": 3
+ },
+ "documents": [
+  {
+   "doc_key": "D1",
+   "filename": "CB-2025-0007_consolidated_manifest.pdf",
+   "kind": "pdf",
+   "error": null,
+   "is_new": false,
+   "label": "Weekly freight manifest with consignment record",
+   "relevance": "used",
+   "reason": "",
+   "pages": [
+    {
+     "page_no": 1,
+     "width": 595.2755737304688,
+     "height": 841.8897705078125,
+     "method": "text"
+    },
+    {
+     "page_no": 2,
+     "width": 595.2755737304688,
+     "height": 841.8897705078125,
+     "method": "text"
+    },
+    {
+     "page_no": 3,
+     "width": 595.2755737304688,
+     "height": 841.8897705078125,
+     "method": "text"
+    },
+    {
+     "page_no": 4,
+     "width": 595.2755737304688,
+     "height": 841.8897705078125,
+     "method": "text"
+    },
+    {
+     "page_no": 5,
+     "width": 595.2755737304688,
+     "height": 841.8897705078125,
+     "method": "text"
+    },
+    {
+     "page_no": 6,
+     "width": 595.2755737304688,
+     "height": 841.8897705078125,
+     "method": "text"
+    },
+    {
+     "page_no": 7,
+     "width": 595.2755737304688,
+     "height": 841.8897705078125,
+     "method": "text"
+    },
+    {
+     "page_no": 8,
+     "width": 595.2755737304688,
+     "height": 841.8897705078125,
+     "method": "text"
+    },
+    {
+     "page_no": 9,
+     "width": 595.2755737304688,
+     "height": 841.8897705078125,
+     "method": "text"
+    },
+    {
+     "page_no": 10,
+     "width": 595.2755737304688,
+     "height": 841.8897705078125,
+     "method": "text"
+    }
+   ],
+   "method": "text"
+  }
+ ],
+ "alerts": [
+  {
+   "type": "inconsistency",
+   "severity": "info",
+   "text": "Pages 1-7 of the manifest are seven identical copies of the same eight routine consignments (TF-9001 to TF-9008), none of which relate to this transaction; only page 8 carries the relevant record for TF-9051 / txn_7745MN."
+  },
+  {
+   "type": "deep_page",
+   "severity": "info",
+   "text": "Evidence for R1, R2, R3 is on page 8 of 10 in Weekly freight manifest with consignment record.",
+   "target": {
+    "requirement": "R1"
+   }
+  }
+ ],
+ "key_dates": [
+  {
+   "label": "service",
+   "date": "2025-04-22",
+   "page_id": "D1-p8"
+  },
+  {
+   "label": "delivery",
+   "date": "2025-04-22",
+   "page_id": "D1-p8"
+  }
+ ],
+ "decision": {
+  "action": "represent",
+  "code_action": "represent",
+  "ai_action": "represent",
+  "needs_judgement": false,
+  "confidence": {
+   "level": "High",
+   "score": 3,
+   "reasons": [
+    "Every requirement the decision relies on is backed by verified evidence"
+   ],
+   "notes": [
+    "1 data inconsistency to check"
+   ]
+  }
+ },
+ "justification": "The merchant's manifest links this exact transaction ID to a completed collection and delivery on 22 April 2025 between the cardholder's own billing and shipping postcodes.",
+ "rationale": "The cardholder claims the freight shipment charged at £412.75 on 22 April 2025 was never collected and no service was provided. TerraFreight's operational manifest records consignment TF-9051 against transaction reference txn_7745MN, collected from LS1 4DT at 11:30 on 22 April 2025 and delivered to LS9 8AA at 17:14 the same day, signed for by warehouse staff with POD image POD-9051-img on file. Those postcodes match the billing and shipping addresses on the authorisation record exactly, and the transaction was authenticated via 3DS with AVS 'Y' and CVV 'M'. Service was therefore rendered on 22 April 2025, three weeks before the 14 May 2025 chargeback. We represent in full and can supply the POD image on request.",
+ "merchant_requests": [],
+ "model": "claude-opus-5"
+}

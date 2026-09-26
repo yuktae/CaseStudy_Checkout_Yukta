@@ -1,0 +1,188 @@
+{
+ "case_id": "CB-2025-0008",
+ "rule": {
+  "key": "visa:13.2",
+  "scheme": "visa",
+  "code": "13.2",
+  "title": "Cancelled Recurring Transaction",
+  "category": "Cancellation",
+  "logic": "ALL",
+  "logic_label": "All required",
+  "note": null
+ },
+ "summary": {
+  "allegation": "The cardholder says they cancelled their FluxFit Online subscription on 18 March 2025 but were still billed £29.99 on 20 April 2025, and asks for the recurring charge to be reversed under Visa 13.2.",
+  "to_defend": "FluxFit must show the disclosed recurring terms and cancellation method, proof the cardholder was notified of the upcoming renewal, proof no cancellation request was received before 20 April 2025, and the cardholder's original opt-in to the recurring billing."
+ },
+ "requirements": [
+  {
+   "id": "R1",
+   "title": "Recurring terms disclosed",
+   "text": "Terms of service disclosing the recurring billing arrangement and the cancellation method.",
+   "verdict": "satisfied",
+   "ai_verdict": "satisfied",
+   "finding": "The published membership terms (version terms_v3.2, February 2025) disclose monthly auto-renewal until cancelled and give two cancellation routes: the account dashboard or emailing support.",
+   "gap": "",
+   "fixable": false,
+   "citations": [
+    {
+     "page_id": "D1-p1",
+     "quote": "Subscriptions auto-renew\nmonthly at the rate disclosed at signup until cancelled. Members may cancel at any time via their\naccount dashboard or by emailing support@fluxfit.example.",
+     "doc_key": "D1",
+     "page_no": 1,
+     "verified": true,
+     "match": "exact",
+     "rects": [
+      [
+       0.6644,
+       0.14699,
+       0.85896,
+       0.16687
+      ],
+      [
+       0.12851,
+       0.16124,
+       0.8506,
+       0.18113
+      ],
+      [
+       0.12851,
+       0.1755,
+       0.57543,
+       0.19538
+      ]
+     ],
+     "source": "text",
+     "relocated": false
+    },
+    {
+     "page_id": "D1-p1",
+     "quote": "Document version: terms_v3.2 — published February 2025.",
+     "doc_key": "D1",
+     "page_no": 1,
+     "verified": true,
+     "match": "exact",
+     "rects": [
+      [
+       0.12851,
+       0.29213,
+       0.48908,
+       0.30856
+      ]
+     ],
+     "source": "text",
+     "relocated": false
+    }
+   ],
+   "downgraded": null,
+   "date_check": null,
+   "vision_only": false
+  },
+  {
+   "id": "R2",
+   "title": "Pre-charge notification sent",
+   "text": "Evidence the cardholder was notified of the upcoming charge (typically 7 days in advance) for transactions over a defined threshold.",
+   "verdict": "missing",
+   "ai_verdict": "missing",
+   "finding": "The terms promise an email at least 5 days before each renewal, but that is a policy statement only; nothing shows a renewal notice was actually sent to this cardholder ahead of the 20 April 2025 charge.",
+   "gap": "No email send log, notification record or copy of the pre-renewal notice addressed to this cardholder for the April 2025 billing cycle.",
+   "fixable": true,
+   "citations": [],
+   "downgraded": null,
+   "date_check": null,
+   "vision_only": false
+  },
+  {
+   "id": "R3",
+   "title": "No cancellation before billing",
+   "text": "No record of the cardholder having submitted a cancellation request prior to the billing date.",
+   "verdict": "missing",
+   "ai_verdict": "missing",
+   "finding": "No account record, support inbox extract or cancellation log was supplied to rebut the cardholder's statement that they cancelled on 18 March 2025, more than a month before the disputed charge.",
+   "gap": "No subscription status history or dashboard/support-ticket record covering 18 March 2025 to 20 April 2025 showing the absence of a cancellation request.",
+   "fixable": true,
+   "citations": [],
+   "downgraded": null,
+   "date_check": null,
+   "vision_only": false
+  },
+  {
+   "id": "R4",
+   "title": "Original opt-in",
+   "text": "Evidence of the cardholder's original opt-in to the recurring arrangement.",
+   "verdict": "missing",
+   "ai_verdict": "missing",
+   "finding": "Nothing in the file evidences the cardholder's original enrolment in the recurring arrangement — no signup record, acceptance of terms, or first-charge confirmation tied to this account.",
+   "gap": "No signup/opt-in record (date, IP, account ID, terms version accepted) linking this cardholder to the FluxFit recurring plan billed as txn_8856OP.",
+   "fixable": true,
+   "citations": [],
+   "downgraded": null,
+   "date_check": null,
+   "vision_only": false
+  }
+ ],
+ "score": {
+  "satisfied": 1,
+  "applicable": 4
+ },
+ "documents": [
+  {
+   "doc_key": "D1",
+   "filename": "CB-2025-0008_subscription_terms.pdf",
+   "kind": "pdf",
+   "error": null,
+   "is_new": false,
+   "label": "FluxFit subscription terms and conditions",
+   "relevance": "used",
+   "reason": "",
+   "pages": [
+    {
+     "page_no": 1,
+     "width": 595.2755737304688,
+     "height": 841.8897705078125,
+     "method": "text"
+    }
+   ],
+   "method": "text"
+  }
+ ],
+ "alerts": [
+  {
+   "type": "conflict",
+   "severity": "warn",
+   "text": "The cardholder states a cancellation was submitted on 18 March 2025; the merchant file contains no account or support record addressing whether such a request was received before the 20 April 2025 renewal."
+  },
+  {
+   "type": "inconsistency",
+   "severity": "info",
+   "text": "The terms commit to a renewal notice at least 5 days in advance, short of the 7-day advance notification contemplated by the reason code, and no notice for this cycle is evidenced either way."
+  }
+ ],
+ "key_dates": [],
+ "decision": {
+  "action": "request_more_evidence",
+  "code_action": "request_more_evidence",
+  "ai_action": "request_more_evidence",
+  "needs_judgement": false,
+  "confidence": {
+   "level": "Medium",
+   "score": 2,
+   "reasons": [
+    "Evidence conflicts with the claim or the transaction data"
+   ],
+   "notes": [
+    "1 data inconsistency to check"
+   ]
+  }
+ },
+ "justification": "Only the generic terms document was supplied; the opt-in, renewal-notice and cancellation records that would decide this case are all plausibly available from FluxFit's systems.",
+ "rationale": "The cardholder disputes a £29.99 FluxFit Online renewal (txn_8856OP, 20 April 2025) on the basis that the subscription was cancelled on 18 March 2025. FluxFit has supplied only its standard published membership terms (terms_v3.2, February 2025), which do disclose monthly auto-renewal and the dashboard/email cancellation routes, satisfying the disclosure requirement. However, the file contains no evidence of this cardholder's original opt-in, no send record for the pre-renewal notice the terms promise, and no account or support-inbox record rebutting the claimed 18 March cancellation. A policy statement that members \"will be notified by email at least 5 days prior to each renewal\" is not proof that a notice was sent to this cardholder. Representment should be held until FluxFit produces the account-level signup, notification and cancellation records; on the current file the case cannot be defended.",
+ "merchant_requests": [
+  "Subscription signup/opt-in record for the cardholder's FluxFit account: enrolment date, terms version accepted, and the confirmation email or checkout screen showing consent to monthly auto-renewal at £29.99.",
+  "Email service provider send log or copy of the pre-renewal notice issued to the cardholder's email address ahead of the 20 April 2025 charge, with timestamp and delivery status.",
+  "Full account status history for the subscription from 1 March 2025 to 30 April 2025 showing no cancellation was actioned via the dashboard.",
+  "Extract of the support@fluxfit.example inbox and ticket system for messages from the cardholder between 15 March 2025 and 20 April 2025, including any cancellation request or reply.",
+  "Billing history for the account showing prior successful recurring charges at £29.99 and their dates, to establish the ongoing arrangement."
+ ],
+ "model": "claude-opus-5"
+}

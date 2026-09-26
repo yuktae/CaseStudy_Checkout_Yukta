@@ -1,0 +1,229 @@
+{
+ "case_id": "CB-2025-0003",
+ "rule": {
+  "key": "mastercard:4837",
+  "scheme": "mastercard",
+  "code": "4837",
+  "title": "No Cardholder Authorisation",
+  "category": "Fraud",
+  "logic": "ANY_TWO",
+  "logic_label": "Any two required",
+  "note": null
+ },
+ "summary": {
+  "allegation": "The issuer says the cardholder did not authorise the EUR 1,240.50 transaction of 1 April 2025 with Velo Continental Rentals and suggests the card details were compromised.",
+  "to_defend": "Mastercard 4837 requires any two of: full AVS plus CVV match, successful 3D Secure authentication, two prior undisputed transactions with matching billing details, or signed proof of delivery to the billing address."
+ },
+ "requirements": [
+  {
+   "id": "R1",
+   "title": "AVS and CVV match",
+   "text": "AVS match (full address) AND CVV match on the disputed transaction.",
+   "verdict": "satisfied",
+   "ai_verdict": "satisfied",
+   "finding": "The gateway authorisation log for txn_4412EF records a full-address AVS match (Y) and a CVV match (M), consistent with the transaction metadata.",
+   "gap": "",
+   "fixable": false,
+   "citations": [
+    {
+     "page_id": "D1-p1",
+     "quote": "AVS check (full address)\nY\nFull match\nCVV check\nM\nMatch",
+     "doc_key": "D1",
+     "page_no": 1,
+     "verified": true,
+     "match": "exact",
+     "rects": [
+      [
+       0.1028,
+       0.29556,
+       0.74899,
+       0.31381
+      ],
+      [
+       0.1028,
+       0.31694,
+       0.72044,
+       0.33519
+      ]
+     ],
+     "source": "text",
+     "relocated": false
+    },
+    {
+     "page_id": "TXN",
+     "quote": "avs_result: Y\ncvv_result: M",
+     "doc_key": null,
+     "page_no": null,
+     "verified": true,
+     "match": "exact",
+     "rects": [],
+     "source": "txn",
+     "relocated": false
+    }
+   ],
+   "downgraded": null,
+   "date_check": null,
+   "vision_only": false
+  },
+  {
+   "id": "R2",
+   "title": "3DS authenticated",
+   "text": "3D Secure authentication completed successfully (Mastercard SecureCode / Identity Check).",
+   "verdict": "satisfied",
+   "ai_verdict": "satisfied",
+   "finding": "A Mastercard Identity Check record for txn_4412EF shows a frictionless AUTHENTICATED outcome with ECI 02, an authentication value and DS transaction ID, timestamped 2025-04-01 11:08:18 UTC by issuer BNP Paribas.",
+   "gap": "",
+   "fixable": false,
+   "citations": [
+    {
+     "page_id": "D2-p1",
+     "quote": "Outcome\nAUTHENTICATED (frictionless)\nECI\n02\nAuthentication value\njA9821k...redacted\nDS transaction ID\nds_4b2e1100c4",
+     "doc_key": "D2",
+     "page_no": 1,
+     "verified": true,
+     "match": "exact",
+     "rects": [
+      [
+       0.12661,
+       0.25279,
+       0.62987,
+       0.27113
+      ],
+      [
+       0.12661,
+       0.27417,
+       0.43417,
+       0.29251
+      ],
+      [
+       0.12661,
+       0.29556,
+       0.54342,
+       0.31389
+      ],
+      [
+       0.12661,
+       0.31694,
+       0.52495,
+       0.33527
+      ]
+     ],
+     "source": "text",
+     "relocated": false
+    },
+    {
+     "page_id": "TXN",
+     "quote": "three_ds_status: authenticated",
+     "doc_key": null,
+     "page_no": null,
+     "verified": true,
+     "match": "exact",
+     "rects": [],
+     "source": "txn",
+     "relocated": false
+    }
+   ],
+   "downgraded": null,
+   "date_check": null,
+   "vision_only": false
+  },
+  {
+   "id": "R3",
+   "title": "Two prior undisputed transactions",
+   "text": "Two prior undisputed transactions from the same cardholder with this merchant in the past 12 months, with matching billing details.",
+   "verdict": "missing",
+   "ai_verdict": "missing",
+   "finding": "No transaction history was supplied; the only hint of prior activity is the gateway note that the device fingerprint is a 'Returning device (seen 3x)', which does not identify prior undisputed transactions or their billing details.",
+   "gap": "No list of two prior undisputed transactions by this cardholder in the last 12 months with matching billing details.",
+   "fixable": true,
+   "citations": [],
+   "downgraded": null,
+   "date_check": null,
+   "vision_only": false
+  },
+  {
+   "id": "R4",
+   "title": "Signed delivery to billing address",
+   "text": "Proof of delivery to the cardholder's billing address with signature.",
+   "verdict": "not_applicable",
+   "ai_verdict": "not_applicable",
+   "finding": "MCC 7512 (vehicle rental) with no goods shipment in evidence; this is a rental service, so signed proof of delivery to the billing address cannot apply.",
+   "gap": "",
+   "fixable": false,
+   "citations": [],
+   "downgraded": null,
+   "date_check": null,
+   "vision_only": false
+  }
+ ],
+ "score": {
+  "satisfied": 2,
+  "applicable": 3
+ },
+ "documents": [
+  {
+   "doc_key": "D1",
+   "filename": "CB-2025-0003_avs_cvv_log.pdf",
+   "kind": "pdf",
+   "error": null,
+   "is_new": false,
+   "label": "Gateway AVS/CVV/3DS authorisation log",
+   "relevance": "used",
+   "reason": "",
+   "pages": [
+    {
+     "page_no": 1,
+     "width": 595.2755737304688,
+     "height": 841.8897705078125,
+     "method": "text"
+    }
+   ],
+   "method": "text"
+  },
+  {
+   "doc_key": "D2",
+   "filename": "CB-2025-0003_3ds_authentication.pdf",
+   "kind": "pdf",
+   "error": null,
+   "is_new": false,
+   "label": "Mastercard Identity Check authentication record",
+   "relevance": "used",
+   "reason": "",
+   "pages": [
+    {
+     "page_no": 1,
+     "width": 595.2755737304688,
+     "height": 841.8897705078125,
+     "method": "text"
+    }
+   ],
+   "method": "text"
+  }
+ ],
+ "alerts": [],
+ "key_dates": [
+  {
+   "label": "other",
+   "date": "2025-04-01",
+   "page_id": "D2-p1"
+  }
+ ],
+ "decision": {
+  "action": "represent",
+  "code_action": "represent",
+  "ai_action": "represent",
+  "needs_judgement": false,
+  "confidence": {
+   "level": "High",
+   "score": 3,
+   "reasons": [
+    "Every requirement the decision relies on is backed by verified evidence"
+   ],
+   "notes": []
+  }
+ },
+ "justification": "Two of the four compelling-evidence requirements (R1 full AVS+CVV match and R2 successful Identity Check authentication) are clearly satisfied, meeting the code's any-two threshold.",
+ "rationale": "The issuer alleges the cardholder did not authorise the EUR 1,240.50 transaction txn_4412EF of 1 April 2025 with Velo Continental Rentals. The gateway authorisation log for that transaction ID records a full-address AVS match (Y) and a CVV match (M), matching the authorisation metadata. The Mastercard Identity Check record ic_77f31a82bb for the same transaction shows a frictionless AUTHENTICATED outcome with ECI 02, authentication value present and DS transaction ID ds_4b2e1100c4, timestamped 2025-04-01 11:08:18 UTC by the issuer BNP Paribas, placing fraud liability with the issuer. The order was placed from a French IP (90.84.21.117, Paris) on a device fingerprint previously seen with this merchant, and the billing and shipping postcodes both match 75011. Two of the four compelling-evidence requirements are satisfied, so the chargeback is represented in full.",
+ "merchant_requests": [],
+ "model": "claude-opus-5"
+}

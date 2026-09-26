@@ -1,0 +1,16 @@
+.env
+.venv
+storage
+storage-test
+storage-run
+docs
+**/__pycache__
+**/*.pyc
+.pytest_cache
+frontend/node_modules
+frontend/dist
+.git
+.claude
+NOTES.md
+*.docx
+backend/tests
