@@ -4,6 +4,8 @@ A workbench for chargeback analysts. You give it a case (reason code, transactio
 
 There's a step-by-step tour with screenshots in [WALKTHROUGH.md](WALKTHROUGH.md).
 
+**Live demo:** https://exhibit-disputes.fly.dev. Browsing the 10 cases is open; creating or re-analysing a case asks for an access code (sent with the submission).
+
 ## Running it
 
 The 10 provided cases come with their analysis already generated (in `seed/`), so you can browse everything without an API key. You only need a key to analyse new cases or re-analyse a case after adding evidence.
