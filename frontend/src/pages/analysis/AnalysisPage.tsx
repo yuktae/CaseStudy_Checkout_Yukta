@@ -843,64 +843,116 @@ function Timeline({ steps, active, onGo }: { steps: { id: string; label: string;
 
 // ---------------------------------------------------------------- alerts
 
-const ALERT_ICON: Record<Alert['type'], typeof Info> = {
-  auto_rule: Gavel,
-  conflict: TriangleAlert,
-  inconsistency: Info,
-  judgement: Scale,
-  deep_page: FileSearch,
-  vision: Eye,
-  unverified: ShieldAlert,
-  missing_file: FileWarning,
-  no_documents: FileWarning,
+const ALERT_META: Record<Alert['type'], { icon: typeof Info; label: string; tone: 'warn' | 'judge' | 'info' }> = {
+  judgement: { icon: Scale, label: 'Needs judgement', tone: 'judge' },
+  auto_rule: { icon: Gavel, label: 'Rule decides outcome', tone: 'judge' },
+  conflict: { icon: TriangleAlert, label: 'Conflict', tone: 'warn' },
+  unverified: { icon: ShieldAlert, label: 'Unverified quote', tone: 'warn' },
+  missing_file: { icon: FileWarning, label: 'Missing file', tone: 'warn' },
+  no_documents: { icon: FileWarning, label: 'No documents', tone: 'warn' },
+  deep_page: { icon: FileSearch, label: 'Evidence deep in document', tone: 'info' },
+  vision: { icon: Eye, label: 'Read from image', tone: 'info' },
+  inconsistency: { icon: Info, label: 'Data check', tone: 'info' },
 }
 
+const TONE = {
+  warn: { chip: 'border-warn/25 bg-warn-soft text-[#8a4a0b]', on: 'border-warn bg-warn text-white' },
+  judge: { chip: 'border-judge/25 bg-judge-soft text-judge', on: 'border-judge bg-judge text-white' },
+  info: { chip: 'border-line bg-surface text-text-2', on: 'border-ink bg-ink text-white' },
+}
+
+interface AlertGroup {
+  key: string
+  icon: typeof Info
+  label: string
+  tone: 'warn' | 'judge' | 'info'
+  items: { text: ReactNode; target?: string }[]
+}
+
+/** Heads-up row: one short chip per kind of alert; the full explanation opens on click. */
 function Alerts({ alerts, linked, onSelectRequirement }: { alerts: Alert[]; linked: CaseDetail['linked']; onSelectRequirement: (id: string) => void }) {
-  if (!alerts.length && !linked.length) return null
+  const [open, setOpen] = useState<string | null>(null)
+  const groups: AlertGroup[] = []
+  const order: Alert['type'][] = ['judgement', 'auto_rule', 'conflict', 'unverified', 'missing_file', 'no_documents', 'deep_page', 'vision', 'inconsistency']
+  for (const type of order) {
+    const of = alerts.filter((a) => a.type === type)
+    if (!of.length) continue
+    const meta = ALERT_META[type]
+    const page = type === 'deep_page' ? of[0].text.match(/page (\d+) of (\d+)/) : null
+    groups.push({
+      key: type,
+      icon: meta.icon,
+      label: page ? `Page ${page[1]} of ${page[2]}` : meta.label,
+      tone: meta.tone,
+      items: of.map((a) => ({ text: a.text, target: a.target?.requirement })),
+    })
+  }
+  if (linked.length) {
+    groups.push({
+      key: 'linked',
+      icon: Link2,
+      label: `${linked.length} linked case${linked.length > 1 ? 's' : ''}`,
+      tone: 'info',
+      items: linked.map((l) => ({
+        text: (
+          <>
+            <Link to={`/cases/${l.case_id}`} className="font-medium text-blue hover:underline">
+              {l.case_id}
+            </Link>{' '}
+            {l.merchant}: same {l.shared.join(' and ')}
+          </>
+        ),
+      })),
+    })
+  }
+  if (!groups.length) return null
+  const current = groups.find((g) => g.key === open)
+
   return (
-    <div className="space-y-2">
-      {alerts.map((a, i) => {
-        const Icon = ALERT_ICON[a.type]
-        const target = a.target?.requirement
-        return (
-          <motion.button
-            key={i}
-            initial={{ opacity: 0, x: -6 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.04 }}
-            onClick={target ? () => onSelectRequirement(target) : undefined}
-            className={clsx(
-              'flex w-full items-start gap-2.5 rounded-xl border px-3.5 py-2.5 text-left text-[13px] leading-snug',
-              a.type === 'judgement'
-                ? 'border-judge/20 bg-judge-soft text-judge'
-                : a.severity === 'warn'
-                  ? 'border-warn/20 bg-warn-soft text-[#8a4a0b]'
-                  : 'border-line bg-surface text-text-2',
-              target ? 'cursor-pointer hover:border-blue-line' : 'cursor-default',
-            )}
+    <div className="rounded-2xl border border-line bg-surface px-4 py-3 shadow-[var(--shadow-card)]">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="mr-1 text-[11px] font-semibold tracking-wide text-muted uppercase">Heads-up</span>
+        {groups.map((g) => {
+          const selected = open === g.key
+          return (
+            <button
+              key={g.key}
+              onClick={() => setOpen(selected ? null : g.key)}
+              className={clsx(
+                'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12.5px] font-semibold transition-colors',
+                selected ? TONE[g.tone].on : clsx(TONE[g.tone].chip, 'hover:brightness-95'),
+              )}
+            >
+              <g.icon className="size-3.5" />
+              {g.label}
+              {g.items.length > 1 && g.key !== 'linked' && <span className="opacity-70">· {g.items.length}</span>}
+            </button>
+          )
+        })}
+      </div>
+      <AnimatePresence initial={false}>
+        {current && (
+          <motion.ul
+            key={current.key}
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="overflow-hidden"
           >
-            <Icon className="mt-px size-4 shrink-0" />
-            <span>{a.text}</span>
-          </motion.button>
-        )
-      })}
-      {linked.length > 0 && (
-        <div className="flex items-start gap-2.5 rounded-xl border border-line bg-surface px-3.5 py-2.5 text-[13px] text-text-2">
-          <Link2 className="mt-px size-4 shrink-0" />
-          <span>
-            Linked cases:{' '}
-            {linked.map((l, i) => (
-              <span key={l.case_id}>
-                {i > 0 && ', '}
-                <Link to={`/cases/${l.case_id}`} className="font-medium text-blue hover:underline">
-                  {l.case_id}
-                </Link>{' '}
-                <span className="text-muted">({l.merchant}, same {l.shared.join(' and ')})</span>
-              </span>
+            {current.items.map((it, i) => (
+              <li key={i} className="mt-3 flex items-start justify-between gap-4 border-t border-line-2 pt-3 text-[13px] leading-snug text-text-2 first:mt-3">
+                <span>{it.text}</span>
+                {it.target && (
+                  <button onClick={() => onSelectRequirement(it.target!)} className="shrink-0 rounded-md px-2 py-0.5 text-[12px] font-semibold text-blue hover:bg-blue-soft">
+                    Go to {it.target}
+                  </button>
+                )}
+              </li>
             ))}
-          </span>
-        </div>
-      )}
+          </motion.ul>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
