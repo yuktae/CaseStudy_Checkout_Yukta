@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import clsx from 'clsx'
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion'
-import { ArrowDownUp, Check, FileJson, LayoutGrid, List, ListFilter, Plus, Search, SearchX, Upload, X } from 'lucide-react'
+import { ArrowDownUp, ArrowRight, Check, FileJson, LayoutGrid, List, ListFilter, Search, SearchX, Upload, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { useWithCode } from '../../components/AccessCode'
@@ -81,7 +81,10 @@ export function Dashboard() {
     <div className="pane-scroll h-full overflow-y-auto">
       {dialog}
       <div className="mx-auto max-w-[1400px] px-8 pt-8 pb-24">
-        <h1 className="text-[26px] font-semibold tracking-tight">Dashboard</h1>
+        <div className="flex items-center gap-3">
+          <img src="/logo.svg" alt="Exhibit" className="size-9" />
+          <h1 className="text-[26px] font-semibold tracking-tight">Dashboard</h1>
+        </div>
 
         <UploadZone onOpen={(files) => setDrawer({ open: true, files })} />
 
@@ -210,40 +213,48 @@ function UploadZone({ onOpen }: { onOpen: (files: File[]) => void }) {
         setOver(false)
         onOpen(Array.from(e.dataTransfer.files))
       }}
+      role="button"
+      tabIndex={0}
+      onClick={() => onOpen([])}
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onOpen([])}
       animate={{ scale: over ? 1.01 : 1 }}
+      whileHover={{ y: -3 }}
       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
       className={clsx(
-        'relative mt-6 overflow-hidden rounded-[20px] bg-gradient-to-br from-blue via-[#2257e0] to-[#1a3aa8] px-8 py-7 text-white shadow-[0_18px_40px_-20px_rgb(37_99_235/0.9)] transition-shadow',
+        'group relative mt-6 cursor-pointer overflow-hidden rounded-[20px] bg-gradient-to-br from-blue via-[#2257e0] to-[#1a3aa8] px-8 py-7 text-white outline-none',
+        'shadow-[0_18px_40px_-20px_rgb(37_99_235/0.9)] transition-shadow duration-300 hover:shadow-[0_26px_50px_-18px_rgb(37_99_235/1)]',
+        'focus-visible:ring-4 focus-visible:ring-blue/30',
         over && 'ring-4 ring-blue/30',
       )}
     >
-      {/* Soft decorative rings, echoing the card style of the reference screens */}
-      <span className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full border-[36px] border-white/[0.06]" />
-      <span className="pointer-events-none absolute -right-40 -bottom-32 size-80 rounded-full border-[28px] border-white/[0.05]" />
+      {/* Soft decorative rings, and a light wash that fades in on hover */}
+      <span className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full border-[36px] border-white/[0.06] transition-transform duration-500 group-hover:scale-110" />
+      <span className="pointer-events-none absolute -right-40 -bottom-32 size-80 rounded-full border-[28px] border-white/[0.05] transition-transform duration-500 group-hover:scale-105" />
+      <span className={clsx('pointer-events-none absolute inset-0 bg-white/[0.07] opacity-0 transition-opacity duration-300 group-hover:opacity-100', over && 'opacity-100')} />
 
       <div className="relative flex flex-wrap items-center justify-between gap-6">
-        <button onClick={() => onOpen([])} className="flex items-center gap-5 text-left">
+        <div className="flex items-center gap-5">
           <motion.span
             animate={{ y: over ? -4 : 0 }}
-            className="flex size-14 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25 backdrop-blur-sm"
+            className="flex size-14 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25 backdrop-blur-sm transition-all duration-300 group-hover:bg-white/25 group-hover:ring-white/40"
           >
-            <Upload className="size-6" />
+            <Upload className="size-6 transition-transform duration-300 group-hover:-translate-y-0.5" />
           </motion.span>
           <span className="text-xl font-semibold tracking-tight">{over ? 'Drop to start a new case' : 'New case'}</span>
-        </button>
-        <div className="flex items-center gap-2">
+        </div>
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => jsonInput.current?.click()}
-            className="flex h-10 items-center gap-2 rounded-lg px-4 text-[13.5px] font-medium text-white/90 ring-1 ring-white/25 transition-colors hover:bg-white/10"
+            onClick={(e) => {
+              e.stopPropagation()
+              jsonInput.current?.click()
+            }}
+            className="flex h-10 items-center gap-2 rounded-lg px-4 text-[13.5px] font-medium text-white/90 ring-1 ring-white/25 transition-colors hover:bg-white/15"
           >
             <FileJson className="size-4" /> Import JSON
           </button>
-          <button
-            onClick={() => onOpen([])}
-            className="flex h-10 items-center gap-2 rounded-lg bg-white px-4 text-[13.5px] font-semibold text-blue shadow-sm transition-transform hover:bg-blue-soft active:scale-[0.98]"
-          >
-            <Plus className="size-4" /> New case
-          </button>
+          <span className="flex size-10 items-center justify-center rounded-full bg-white text-blue shadow-sm transition-transform duration-300 group-hover:translate-x-1">
+            <ArrowRight className="size-5" />
+          </span>
         </div>
       </div>
       <input
@@ -251,6 +262,7 @@ function UploadZone({ onOpen }: { onOpen: (files: File[]) => void }) {
         type="file"
         hidden
         accept=".json,application/json"
+        onClick={(e) => e.stopPropagation()}
         onChange={(e) => {
           if (e.target.files?.length) onOpen(Array.from(e.target.files))
           e.target.value = ''

@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import clsx from 'clsx'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, ArrowRight, Check, FileJson, FileText, ImageIcon, Sparkles, Upload, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, FileText, ImageIcon, Sparkles, Upload, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useWithCode } from '../../components/AccessCode'
 import { useToast } from '../../components/toast'
@@ -122,7 +122,6 @@ export function NewCaseDrawer({ open, onClose, initialFiles }: { open: boolean; 
   const [showErrors, setShowErrors] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [imported, setImported] = useState<string | null>(null)
-  const jsonInput = useRef<HTMLInputElement>(null)
   const maxFiles = meta?.max_files ?? 4
   const maxMb = meta?.max_file_mb ?? 20
 
@@ -230,19 +229,9 @@ export function NewCaseDrawer({ open, onClose, initialFiles }: { open: boolean; 
             >
               <header className="flex items-center justify-between border-b border-line px-7 py-5">
                 <h2 className="text-lg font-semibold">New case</h2>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => jsonInput.current?.click()} className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-blue hover:bg-blue-soft">
-                    <FileJson className="size-4" /> Import JSON
-                  </button>
-                  <input ref={jsonInput} type="file" accept=".json,application/json" hidden onChange={(e) => {
-                    const f = e.target.files?.[0]
-                    if (f) importJson(f)
-                    e.target.value = ''
-                  }} />
-                  <button onClick={onClose} aria-label="Close" className="rounded-md p-1.5 text-muted hover:bg-line-2 hover:text-text">
-                    <X className="size-4" />
-                  </button>
-                </div>
+                <button onClick={onClose} aria-label="Close" className="rounded-md p-1.5 text-muted hover:bg-line-2 hover:text-text">
+                  <X className="size-4" />
+                </button>
               </header>
 
               {/* Stepper */}
