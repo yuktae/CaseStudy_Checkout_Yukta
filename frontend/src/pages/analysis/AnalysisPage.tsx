@@ -416,7 +416,7 @@ function AnalysisView({ detail, viewingOld }: { detail: CaseDetail; viewingOld: 
                 value={rationale}
                 edited={!!draft.rationale}
                 aiChanged={!!draft.rationale && draft.rationale.base !== workup.rationale}
-                writtenFor={workup.decision.ai_action}
+                writtenFor={workup.rationale_for ?? workup.decision.ai_action}
                 recommended={workup.decision.action}
                 onChange={(v) => update((r) => ({ ...r, rationale: { value: v, base: workup.rationale } }))}
                 onReset={() => update((r) => ({ ...r, rationale: null }))}

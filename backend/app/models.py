@@ -46,7 +46,8 @@ class CaseIn(BaseModel):
 class VisionReading(BaseModel):
     transcription: str = Field(description="Every piece of visible text, line by line, in reading order, verbatim.")
     description: str = Field(description="One or two sentences on what the image shows and any visual limits (e.g. 'front view only').")
-    legibility: Literal["clear", "partial", "poor"]
+    legibility: Literal["clear", "partial", "poor"] = Field(
+        description="clear: all text can be read; partial: some cannot; poor: most cannot.")
 
 
 # -------------------------------------------------- assessment agent output
@@ -63,10 +64,12 @@ class Citation(BaseModel):
 class RequirementAssessment(BaseModel):
     requirement_id: str
     verdict: Verdict
-    finding: str = Field(description="One or two sentences: what the evidence shows for this requirement.")
+    finding: str = Field(description="One or two sentences: what the evidence shows for this requirement. "
+                         "For not_applicable, why it cannot apply to this transaction.")
     citations: list[Citation]
     gap: str = Field(description="What is missing or weak. Empty string when satisfied or not applicable.")
-    fixable: bool = Field(description="True if the merchant could plausibly close the gap with more evidence.")
+    fixable: bool = Field(description="True if the merchant could plausibly close the gap with more evidence. "
+                          "False when satisfied or not applicable.")
 
 
 class DocumentAssessment(BaseModel):
@@ -78,13 +81,15 @@ class DocumentAssessment(BaseModel):
 
 class Flag(BaseModel):
     kind: Literal["conflict", "inconsistency"]
-    text: str
+    text: str = Field(description="One or two sentences naming the documents or fields involved and what the analyst "
+                                  "should check.")
 
 
 class KeyDate(BaseModel):
     label: Literal["delivery", "service", "other"]
     date: str = Field(description="ISO date YYYY-MM-DD.")
     page_id: str
+    quote: str = Field(description="Verbatim text from that page that states the date.")
 
 
 class Assessment(BaseModel):
@@ -95,6 +100,12 @@ class Assessment(BaseModel):
     flags: list[Flag]
     key_dates: list[KeyDate]
     recommended_action: Action
-    justification: str = Field(description="One line.")
-    rationale: str = Field(description="3-5 sentences, ready to file.")
-    merchant_requests: list[str] = Field(description="Specific asks; empty unless request_more_evidence.")
+    justification: str = Field(description="One line naming the requirement that decides the action.")
+    rationale: str = Field(description="3 to 5 short points, one sentence each, one per line, ready to file.")
+    merchant_requests: list[str] = Field(description="Two to five specific asks when recommended_action is "
+                                               "request_more_evidence, otherwise empty.")
+
+
+class RationaleRewrite(BaseModel):
+    rationale: str = Field(description="3 to 5 short points, one sentence each, one per line, ready to file.")
+    justification: str = Field(description="One line naming the requirement that decides the action.")

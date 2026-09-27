@@ -11,8 +11,8 @@
   "note": "This reason code generally cannot be represented. Recommend accepting liability unless the merchant can prove the transaction was miscoded by the issuer."
  },
  "summary": {
-  "allegation": "The issuer has raised the transaction under the Visa Fraud Monitoring Program, meaning this card account was flagged as fraudulent through Visa's fraud monitoring reporting rather than through a standard dispute.",
-  "to_defend": "The only defence is documentary proof that the issuer miscoded the dispute under the Visa Fraud Monitoring Program."
+  "allegation": "The issuer has raised the transaction under the Visa Fraud Monitoring Program, asserting that this GBP 78.50 payment of 30 April 2025 forms part of a merchant fraud-monitoring case rather than a standard disputed sale.",
+  "to_defend": "Under Visa 10.5 the only defence is proof that the issuer miscoded the transaction under the Visa Fraud Monitoring Program; evidence about the merits of the sale does not qualify."
  },
  "requirements": [
   {
@@ -21,13 +21,14 @@
    "text": "Evidence that the transaction was miscoded by the issuer under the Visa Fraud Monitoring Program.",
    "verdict": "missing",
    "ai_verdict": "missing",
-   "finding": "Nothing in the file addresses the coding of the dispute; the merchant supplied a Visa Secure authentication record and a delivery confirmation, both of which speak to transaction validity rather than to whether the issuer applied the wrong reason code.",
-   "gap": "No issuer correspondence, Visa case record or fraud reporting extract showing the dispute was raised under the wrong reason code.",
+   "finding": "Nothing supplied addresses miscoding by the issuer. The merchant has filed a Visa Secure authentication record and a delivery confirmation, which speak to the legitimacy of the sale, not to whether the issuer wrongly coded it under the Visa Fraud Monitoring Program.",
+   "gap": "No evidence that the transaction was reported or coded in error under the Visa Fraud Monitoring Program, for example issuer or Visa correspondence confirming the case was raised against the wrong transaction or merchant identifier.",
    "fixable": false,
    "citations": [],
    "downgraded": null,
    "date_check": null,
-   "vision_only": false
+   "vision_only": false,
+   "hard_to_read": false
   }
  ],
  "score": {
@@ -43,7 +44,7 @@
    "is_new": false,
    "label": "Visa Secure authentication record",
    "relevance": "not_relevant",
-   "reason": "Shows the cardholder was authenticated via 3DS, which evidences a genuine transaction but does not show the issuer miscoded the dispute under the Fraud Monitoring Program.",
+   "reason": "Shows 3DS authentication for txn_1178ST but goes to the merits of the sale, not to issuer miscoding under the Fraud Monitoring Program, which is the only exception for 10.5.",
    "pages": [
     {
      "page_no": 1,
@@ -60,9 +61,9 @@
    "kind": "pdf",
    "error": null,
    "is_new": false,
-   "label": "Evri delivery confirmation, order BB-77231",
+   "label": "Carrier delivery confirmation, order BB-77231",
    "relevance": "not_relevant",
-   "reason": "Confirms delivery to the billing postcode, which goes to transaction validity, not to whether the reason code was applied in error.",
+   "reason": "Confirms delivery of the goods; delivery merits do not meet the miscoding exception required to represent a 10.5 chargeback.",
    "pages": [
     {
      "page_no": 1,
@@ -85,7 +86,9 @@
   {
    "label": "delivery",
    "date": "2025-05-02",
-   "page_id": "D2-p1"
+   "page_id": "D2-p1",
+   "quote": "Carrier: Evri, tracking H7821VV. Delivered 2 May 2025, 14:08, signed by 'WHITFORD'.",
+   "verified": true
   }
  ],
  "decision": {
@@ -99,11 +102,34 @@
    "reasons": [
     "Every requirement the decision relies on is backed by verified evidence"
    ],
-   "notes": []
+   "notes": [],
+   "checks": [
+    {
+     "label": "Key evidence comes from document text, not only from an image",
+     "passed": true
+    },
+    {
+     "label": "Images the evidence relies on are fully legible",
+     "passed": true
+    },
+    {
+     "label": "Every quoted passage was found in the documents",
+     "passed": true
+    },
+    {
+     "label": "No conflict in the evidence",
+     "passed": true
+    },
+    {
+     "label": "The rule check and the AI recommendation agree",
+     "passed": true
+    }
+   ]
   }
  },
- "justification": "Reason code 10.5 cannot be represented on the merits and no evidence suggests the issuer miscoded the dispute.",
- "rationale": "The issuer has processed this £78.50 transaction of 30 April 2025 (txn_1178ST) under Visa reason code 10.5, Visa Fraud Monitoring Program.\nThe only defence available under this code is proof that the issuer applied the wrong reason code, and no issuer correspondence or Visa case record addressing coding has been supplied.\nThe Visa Secure record (ECI 05, authenticated at 2025-04-30 22:14:51 UTC) and the Evri delivery to 22 Cavendish Court, SW4 7QR on 2 May 2025 show the transaction was genuine, but evidence of a genuine transaction does not establish miscoding.\nStrong authentication and matching AVS and CVV results are worth raising separately with the acquirer if the account has been flagged in error, but they do not support a representment here.\nWe recommend accepting liability for the full £78.50.",
+ "justification": "Accept liability: R1, the sole defence for Visa 10.5, requires proof of issuer miscoding, and no such evidence exists in the file.",
+ "rationale": "The issuer has processed this GBP 78.50 transaction of 30 April 2025 under Visa reason code 10.5, Visa Fraud Monitoring Program.\nReason code 10.5 cannot be represented except on proof that the issuer miscoded the transaction under the programme, and no such proof has been supplied.\nThe two documents filed, the Visa Secure record for txn_1178ST and the Evri delivery confirmation for order BB-77231 delivered 2 May 2025, address the merits of the sale only.\nStrong authentication data (3DS authenticated, AVS Y, CVV M) does not create a defence under this code.\nRecommend accepting liability and, separately, reviewing the merchant's fraud ratios with Visa outside the chargeback process.",
  "merchant_requests": [],
- "model": "claude-opus-5"
+ "model": "claude-opus-5",
+ "rationale_for": "accept_liability"
 }

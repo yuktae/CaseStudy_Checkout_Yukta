@@ -54,7 +54,9 @@ def score_confidence(requirements: list[dict], logic: str, action: str, n_confli
     applicable = [r for r in requirements if r["verdict"] != "not_applicable"]
     partials = [r for r in applicable if r["verdict"] == "partial"]
     unverified = sum(1 for r in requirements for c in r["citations"] if not c["verified"])
-    image_only = any(r["vision_only"] and r["verdict"] in ("satisfied", "partial") for r in requirements)
+    relied_on = [r for r in requirements if r["verdict"] in ("satisfied", "partial")]
+    image_only = any(r["vision_only"] for r in relied_on)
+    hard_to_read = any(r.get("hard_to_read") for r in relied_on)
     accepting = action == "accept_liability"
 
     def plural(n: int, word: str) -> str:
@@ -67,6 +69,8 @@ def score_confidence(requirements: list[dict], logic: str, action: str, n_confli
     checks += [
         ("Key evidence comes from document text, not only from an image", not image_only,
          "Key evidence read from an image"),
+        ("Images the evidence relies on are fully legible", not hard_to_read,
+         "An image the evidence relies on is partly illegible"),
         ("Every quoted passage was found in the documents", not unverified,
          f"{plural(unverified, 'quote')} could not be verified"),
         # A merchant claim that the data contradicts can only support accepting, so it only counts otherwise.
@@ -98,12 +102,19 @@ def explain_confidence(workup: dict) -> dict:
 
 
 def build_workup(case: dict, rule: dict, docs: list[dict], assessment: Assessment,
-                 located: dict[str, list[dict]]) -> dict:
+                 located: dict[str, list[dict]], key_dates: list[dict] | None = None) -> dict:
+    """key_dates: the model's dates, each with "verified" set once its quote was found on the cited page."""
     by_id: dict = {}
     for r in assessment.requirements:  # first entry wins if the model repeats a requirement
         by_id.setdefault(r.requirement_id, r)
     cb_date = _parse_date(case["chargeback_date"])
-    service_dates = [d for d in assessment.key_dates if d.label in ("delivery", "service")]
+    if key_dates is None:
+        key_dates = [{**k.model_dump(), "verified": False} for k in assessment.key_dates]
+    # Only dates whose quote was found in the documents count, so a stray date cannot flip a verdict.
+    service_dates = [(day, k["page_id"]) for k in key_dates
+                     if k["label"] in ("delivery", "service") and k["verified"] and (day := _parse_date(k["date"]))]
+    legibility = {(d["doc_key"], p["page_no"]): (p.get("vision") or {}).get("legibility")
+                  for d in docs for p in d["pages"] if p["method"] == "vision"}
 
     requirements = []
     for spec in rule["requirements"]:
@@ -124,17 +135,18 @@ def build_workup(case: dict, rule: dict, docs: list[dict], assessment: Assessmen
                 req["downgraded"] = "No evidence was cited for this verdict."
 
         if spec.get("date_check") and req["verdict"] != "not_applicable":
-            dates = [d for d in (_parse_date(k.date) for k in service_dates) if d]
-            if dates and cb_date:
-                latest = max(dates)
+            if service_dates and cb_date:
+                latest, page = max(service_dates)
                 ok = latest <= cb_date
-                req["date_check"] = {"ok": ok, "detail": f"{latest:%d %b %Y} vs chargeback {cb_date:%d %b %Y}"}
+                req["date_check"] = {"ok": ok, "detail": f"{latest:%d %b %Y} ({page}) vs chargeback {cb_date:%d %b %Y}"}
                 if not ok and req["verdict"] == "satisfied":
                     req["verdict"] = "missing"
                     req["downgraded"] = "Delivery or service date is after the chargeback date."
             elif req["verdict"] == "satisfied":
-                req["date_check"] = {"ok": None, "detail": "No delivery or service date could be extracted."}
+                req["date_check"] = {"ok": None, "detail": "No delivery or service date could be verified in the documents."}
         req["vision_only"] = bool(doc_cites) and all(c["source"] == "vision" for c in doc_cites if c["verified"])
+        req["hard_to_read"] = any(legibility.get((c["doc_key"], c["page_no"])) in ("partial", "poor")
+                                  for c in doc_cites if c["verified"])
         requirements.append(req)
 
     applicable = [r for r in requirements if r["verdict"] != "not_applicable"]
@@ -222,7 +234,7 @@ def build_workup(case: dict, rule: dict, docs: list[dict], assessment: Assessmen
         "score": {"satisfied": sum(r["verdict"] == "satisfied" for r in applicable), "applicable": len(applicable)},
         "documents": doc_views,
         "alerts": alerts,
-        "key_dates": [k.model_dump() for k in assessment.key_dates],
+        "key_dates": key_dates,
         "decision": {"action": code_action, "code_action": code_action, "ai_action": ai_action,
                      "needs_judgement": needs_judgement, "confidence": confidence},
         "justification": assessment.justification,

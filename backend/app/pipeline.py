@@ -6,7 +6,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from . import assess, db, decide, documents, locate, rules
+from . import assess, db, decide, documents, locate, rules, text
 from .config import DATASET_DIR, MODEL, SEED_DIR, UPLOAD_DIR, has_api_key
 from .llm import LLMError
 
@@ -68,8 +68,26 @@ def run(case_id: str, job_id: int | None = None) -> dict:
         if r.requirement_id not in located:
             located[r.requirement_id] = [locate.locate(c.model_dump(), docs, txn_text) for c in r.citations]
 
-    workup = decide.build_workup(case, rule, docs, assessment, located)
+    # A date only counts once its quote is found on the page the model cited.
+    key_dates = []
+    for k in assessment.key_dates:
+        hit = locate.locate({"page_id": k.page_id, "quote": k.quote}, docs, txn_text)
+        key_dates.append({**k.model_dump(), "verified": hit["verified"],
+                          "page_id": hit["page_id"] if hit["verified"] else k.page_id})
+
+    workup = decide.build_workup(case, rule, docs, assessment, located, key_dates)
     workup["model"] = MODEL
+    workup["rationale_for"] = workup["decision"]["ai_action"]
+    if workup["decision"]["needs_judgement"]:
+        # The rule check overrode the model: redraft the text to file so it argues for the final action.
+        action = workup["decision"]["action"]
+        try:
+            redraft = assess.rewrite_for_action(workup, action)
+            workup["ai_rationale"], workup["ai_justification"] = workup["rationale"], workup["justification"]
+            workup["rationale"], workup["justification"] = text.points(redraft.rationale), text.plain(redraft.justification)
+            workup["rationale_for"] = action
+        except LLMError as e:
+            log.warning("rationale redraft failed for %s: %s", case_id, e)
     version = db.add_workup(case_id, workup)
     db.clear_new_flags(case_id)
     db.log(case_id, f"Analysis v{version} completed")

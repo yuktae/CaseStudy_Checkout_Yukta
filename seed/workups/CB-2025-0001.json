@@ -11,8 +11,8 @@
   "note": null
  },
  "summary": {
-  "allegation": "The cardholder says they ordered clothing on 22 March 2025 and never received the package, and that two contacts with the merchant did not resolve it, so the issuer raised a 13.1 non receipt chargeback for GBP 189.99.",
-  "to_defend": "The merchant must show proof of delivery to the cardholder's address on or before the chargeback date, with carrier name, tracking number and confirmation of delivery."
+  "allegation": "The cardholder says they ordered clothing on 22 March 2025 and the package never arrived, and that two contacts with the merchant produced no resolution, so they claim GBP 189.99 under Visa 13.1.",
+  "to_defend": "The merchant must show proof of delivery, with carrier, tracking number and delivery confirmation to the cardholder's address on or before the chargeback date."
  },
  "requirements": [
   {
@@ -21,7 +21,7 @@
    "text": "Proof of delivery: tracking number, carrier name, and confirmation of delivery to the cardholder's address.",
    "verdict": "satisfied",
    "ai_verdict": "satisfied",
-   "finding": "Royal Mail tracking RM98421144GB shows the item posted 23 March 2025 and delivered and signed for at SW4 7QR on 24 March 2025, with the recipient named as M. Whitford at 22 Cavendish Court.",
+   "finding": "Royal Mail tracking RM98421144GB shows the item posted 23 March 2025 from Leeds and delivered and signed for at SW4 7QR on 24 March 2025, with signature on file; the merchant order record repeats the same carrier and tracking number.",
    "gap": "",
    "fixable": false,
    "citations": [
@@ -88,7 +88,8 @@
    ],
    "downgraded": null,
    "date_check": null,
-   "vision_only": false
+   "vision_only": false,
+   "hard_to_read": false
   },
   {
    "id": "R2",
@@ -96,13 +97,14 @@
    "text": "For services: evidence the service was rendered on or before the expected date (booking confirmation, attendance log, access logs).",
    "verdict": "not_applicable",
    "ai_verdict": "not_applicable",
-   "finding": "The transaction is for physical merchandise, a Heritage Wool Overcoat shipped by Royal Mail, so the services evidence requirement does not apply.",
+   "finding": "This is a physical goods purchase of a wool overcoat from a clothing retailer (MCC 5651) shipped via Royal Mail, so there is no service component to evidence.",
    "gap": "",
    "fixable": false,
    "citations": [],
    "downgraded": null,
    "date_check": null,
-   "vision_only": false
+   "vision_only": false,
+   "hard_to_read": false
   },
   {
    "id": "R3",
@@ -110,13 +112,13 @@
    "text": "Date of delivery / service rendered is on or before the chargeback date.",
    "verdict": "satisfied",
    "ai_verdict": "satisfied",
-   "finding": "Delivery is recorded on 24 March 2025 at 11:47, two days after the 22 March 2025 purchase and well before the 18 April 2025 chargeback.",
+   "finding": "Delivery is recorded on 24 March 2025 at 11:47, two days after the 22 March 2025 purchase and well before the chargeback was raised.",
    "gap": "",
    "fixable": false,
    "citations": [
     {
      "page_id": "D1-p1",
-     "quote": "DELIVERED — signed by WHITFORD",
+     "quote": "DELIVERED — signed by WHITFORD\n24 Mar 2025 11:47\nSW4 7QR",
      "doc_key": "D1",
      "page_no": 1,
      "verified": true,
@@ -125,7 +127,7 @@
       [
        0.12661,
        0.36682,
-       0.39124,
+       0.72351,
        0.38508
       ]
      ],
@@ -154,9 +156,10 @@
    "downgraded": null,
    "date_check": {
     "ok": true,
-    "detail": "24 Mar 2025 vs chargeback 18 Apr 2025"
+    "detail": "24 Mar 2025 (D2-p1) vs chargeback 18 Apr 2025"
    },
-   "vision_only": false
+   "vision_only": false,
+   "hard_to_read": false
   },
   {
    "id": "R4",
@@ -164,10 +167,40 @@
    "text": "The delivery address materially matches the address provided by the cardholder at purchase.",
    "verdict": "satisfied",
    "ai_verdict": "satisfied",
-   "finding": "The delivery address 22 Cavendish Court, London SW4 7QR matches the billing and shipping postcode on the transaction record, and AVS returned Y with CVV M and a 3DS authenticated result.",
+   "finding": "The carrier delivered to M. Whitford, 22 Cavendish Court, London SW4 7QR, which is identical to the billing and shipping address on the order and matches the transaction's billing and shipping postcodes with AVS result Y.",
    "gap": "",
    "fixable": false,
    "citations": [
+    {
+     "page_id": "D1-p1",
+     "quote": "M. Whitford\n22 Cavendish Court\nLondon SW4 7QR",
+     "doc_key": "D1",
+     "page_no": 1,
+     "verified": true,
+     "match": "exact",
+     "rects": [
+      [
+       0.12851,
+       0.21351,
+       0.21943,
+       0.23339
+      ],
+      [
+       0.12851,
+       0.22776,
+       0.282,
+       0.24765
+      ],
+      [
+       0.12851,
+       0.24202,
+       0.26988,
+       0.2619
+      ]
+     ],
+     "source": "text",
+     "relocated": false
+    },
     {
      "page_id": "D2-p1",
      "quote": "Billing address: 22 Cavendish Court, London SW4 7QR\nShipping address: 22 Cavendish Court, London SW4 7QR",
@@ -202,22 +235,12 @@
      "rects": [],
      "source": "txn",
      "relocated": false
-    },
-    {
-     "page_id": "TXN",
-     "quote": "shipping_address_postcode: SW4 7QR",
-     "doc_key": null,
-     "page_no": null,
-     "verified": true,
-     "match": "exact",
-     "rects": [],
-     "source": "txn",
-     "relocated": false
     }
    ],
    "downgraded": null,
    "date_check": null,
-   "vision_only": false
+   "vision_only": false,
+   "hard_to_read": false
   }
  ],
  "score": {
@@ -231,7 +254,7 @@
    "kind": "pdf",
    "error": null,
    "is_new": false,
-   "label": "Royal Mail proof of delivery",
+   "label": "Royal Mail delivery confirmation",
    "relevance": "used",
    "reason": "",
    "pages": [
@@ -269,12 +292,16 @@
   {
    "label": "delivery",
    "date": "2025-03-24",
-   "page_id": "D1-p1"
+   "page_id": "D1-p1",
+   "quote": "This item was delivered to the address shown and signed for at 11:47 on 24 March 2025.",
+   "verified": true
   },
   {
-   "label": "other",
-   "date": "2025-03-22",
-   "page_id": "D2-p1"
+   "label": "delivery",
+   "date": "2025-03-24",
+   "page_id": "D2-p1",
+   "quote": "Delivered 24 March 2025, 11:47 — signed for at SW4 7QR",
+   "verified": true
   }
  ],
  "decision": {
@@ -288,11 +315,36 @@
    "reasons": [
     "Every requirement the decision relies on is backed by verified evidence"
    ],
-   "notes": []
+   "notes": [],
+   "checks": [
+    {
+     "label": "Key evidence comes from document text, not only from an image",
+     "passed": true
+    },
+    {
+     "label": "Images the evidence relies on are fully legible",
+     "passed": true
+    },
+    {
+     "label": "Every quoted passage was found in the documents",
+     "passed": true
+    },
+    {
+     "label": "No conflict in the evidence",
+     "passed": true
+    },
+    {
+     "label": "The rule check and the AI recommendation agree",
+     "passed": true
+    }
+   ]
   }
  },
- "justification": "Carrier proof of delivery with signature to the cardholder's own address, supported by full AVS, CVV and 3DS matches, meets every applicable 13.1 requirement.",
- "rationale": "The issuer alleges the goods ordered on 22 March 2025 for GBP 189.99 were never received.\nRoyal Mail tracking RM98421144GB for order NT-44912 shows the parcel posted 23 March 2025 and delivered and signed for by WHITFORD at 11:47 on 24 March 2025.\nThe delivery address, 22 Cavendish Court, London SW4 7QR, matches the billing and shipping postcode captured at authorisation.\nThe transaction carried AVS Y, CVV M and a successful 3DS authentication from a UK IP, consistent with the genuine cardholder placing the order.\nDelivery on 24 March 2025 preceded the 18 April 2025 chargeback, so the non receipt claim is rebutted and the case should be represented in full.",
- "merchant_requests": [],
- "model": "claude-opus-5"
+ "justification": "Represent: R1 is met by Royal Mail tracking RM98421144GB showing a signed delivery to the cardholder's own address, and R3 and R4 follow from the same record.",
+ "rationale": "The cardholder claims a GBP 189.99 clothing order placed 22 March 2025 never arrived.\nRoyal Mail tracking RM98421144GB shows order #NT-44912 posted 23 March 2025 and delivered, signed by WHITFORD, at 11:47 on 24 March 2025.\nDelivery was made to 22 Cavendish Court, London SW4 7QR, the same address given as billing and shipping at purchase, and the postcode matches the transaction record with AVS Y.\nThe transaction was authenticated by 3DS with CVV match, supporting that the genuine cardholder placed the order.\nDelivery on 24 March 2025 precedes the 18 April 2025 chargeback, so all applicable 13.1 requirements are met.",
+ "merchant_requests": [
+  ""
+ ],
+ "model": "claude-opus-5",
+ "rationale_for": "represent"
 }

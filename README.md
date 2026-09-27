@@ -39,7 +39,7 @@ Open http://localhost:5173. On Windows use `.venv\Scripts\` instead of `.venv/bi
 ```bash
 cd backend
 ../.venv/bin/python -m app.cli run --all   # analyse every case and refresh seed/
-../.venv/bin/python -m app.cli eval        # compare with the expected actions in eval/expected.json
+../.venv/bin/python -m app.cli eval        # compare the actions with eval/expected.json
 ../.venv/bin/python -m pytest tests -q     # tests, no API key needed
 ```
 
@@ -50,9 +50,9 @@ The split is deliberate: the LLM does the reading and the writing, and plain cod
 1. **Intake** (`main.py`, `pipeline.py`). The case is validated against the `cases.json` schema, the files are stored and a background job starts. Its progress shows in a small panel in the UI.
 2. **Reading the documents** (`documents.py`, `vision.py`). PDFs go through PyMuPDF, which gives the text and the position of every word. Images are read by a vision model, and RapidOCR finds where each line sits so it can be highlighted.
 3. **Rules and checks** (`rules.yaml`, `rules.py`). `reason_codes.md` is encoded as data: each code's requirements and whether it needs all of them, any two, any one, or can't be represented at all (Visa 10.5, Mastercard 4870). This step also builds the AVS, CVV, 3DS and address checks, and finds linked cases that share a device, IP or postcode.
-4. **Assessment** (`assess.py`). One structured LLM call per case. For each requirement it returns a verdict, a finding, verbatim quotes with their page, the gap and whether the merchant could fix it. It also marks irrelevant documents, flags conflicts, and drafts the rationale, justification and merchant requests.
+4. **Assessment** (`assess.py`). One structured LLM call per case. For each requirement it returns a verdict, a finding, verbatim quotes with their page, the gap and whether the merchant could fix it. It also marks irrelevant documents, flags conflicts, and drafts the rationale, justification and merchant requests. Merchant documents are passed as untrusted data: their text can't open or close the prompt's own sections, and the prompt tells the model to flag, not follow, any instructions found inside them.
 5. **Checking every quote** (`locate.py`). Each quote is searched for in the extracted text (exact first, then fuzzy) and turned into highlight boxes. A quote on the wrong page is moved to the right one. A quote that can't be found doesn't count as evidence and lowers the verdict it supported.
-6. **The decision** (`decide.py`). The recommended action comes from the verified verdicts and the rule logic, not from the model. Delivery dates are checked against the chargeback date. If the model's own recommendation disagrees, the case is flagged "Needs judgement". Confidence always comes with the reasons that lowered it.
+6. **The decision** (`decide.py`). The recommended action comes from the verified verdicts and the rule logic, not from the model. Delivery dates are checked against the chargeback date, using only dates whose quote was found in the documents. If the model's own recommendation disagrees, the case is flagged "Needs judgement" and a short second call rewrites the rationale so the text to file argues for the final action. Confidence always comes with the reasons that lowered it.
 
 The frontend (`frontend/src`, React + TypeScript) has two pages: the dashboard (`pages/dashboard`) and the case analysis (`pages/analysis`).
 
@@ -79,7 +79,7 @@ So it's a mix: PyMuPDF for PDF text and positions, a vision model to read images
 ## Surfacing uncertainty
 
 - Quotes that can't be found in the documents are struck through and don't count.
-- "Needs judgement" appears when the rule check and the model disagree, and the rationale is labelled if it argues for the other action.
+- "Needs judgement" appears when the rule check and the model disagree; both views are shown and the rationale is rewritten for the final action.
 - Confidence is shown with its reasons, for example "key evidence read from an image".
 - "Not relevant" is kept separate from "missing", so a merchant's own fraud score shows as uploaded but irrelevant, with the reason.
 - Heads-up chips cover what's easy to miss: conflicts, deep pages, rules that decide the outcome, linked cases.
@@ -88,31 +88,13 @@ So it's a mix: PyMuPDF for PDF text and positions, a vision model to read images
 **How confidence is calculated** (`decide.py`, `score_confidence`). Confidence is about the recommended action. It starts at High and each failed check lowers it one level (none failed: High, one: Medium, two or more: Low):
 
 1. Key evidence comes from document text, not only from an image.
-2. Every quoted passage was found in the documents.
-3. No conflict in the evidence. A conflict doesn't count when accepting, because a merchant claim that the data contradicts can only support accepting.
-4. The rule check and the AI recommendation agree.
-5. When accepting a case that could be represented, no requirement is partly met (otherwise it may be closer than it looks).
+2. Images the evidence relies on are fully legible (the vision model rates each one).
+3. Every quoted passage was found in the documents.
+4. No conflict in the evidence. A conflict doesn't count when accepting, because a merchant claim that the data contradicts can only support accepting.
+5. The rule check and the AI recommendation agree.
+6. When accepting a case that could be represented, no requirement is partly met (otherwise it may be closer than it looks).
 
 Data inconsistencies, such as a time-zone difference, are shown as notes but don't change the level. Hovering the confidence label on a case shows the reasons.
-
-## Results on the 10 cases
-
-Before building the tool I wrote down the expected action for each case (`eval/expected.json`). The tool agrees on all 10, and all 51 quotes it cited were found in the documents.
-
-| Case | Code | Dataset hint | Recommendation | Confidence | What the analyst sees |
-|---|---|---|---|---|---|
-| 0001 | Visa 13.1 | Straightforward | Represent | High | Signed delivery to the matching address |
-| 0002 | Visa 13.1 | Check the addresses | Request more evidence | Low | Delivered to an address the cardholder disputes; postcodes differ, AVS failed; the proof is a screenshot |
-| 0003 | MC 4837 | How many are needed? | Represent | High | Any two are needed: AVS + CVV match and 3DS |
-| 0004 | MC 4837 | Evidence sounds confident | Accept liability | High | The merchant's risk score is marked not relevant; its "legitimate" conclusion is flagged against failed AVS, CVV and no 3DS |
-| 0005 | Visa 12.6.1 | Two charges, same day | Represent | High | Two separate orders |
-| 0006 | Visa 13.3 | What can the photo tell you? | Request more evidence | Low | A front-view photo can't show a wobbling frame; nothing shows the refund request was answered |
-| 0007 | MC 4855 | Evidence is in there somewhere | Represent | High | The proof is one line on page 8 of 10, matched on the transaction reference |
-| 0008 | Visa 13.2 | Policy vs proof | Request more evidence | Medium | Only generic terms; a policy isn't proof a notice was sent |
-| 0009 | MC 4859 | Read the policy and the log together | Represent | Medium | All four met, but the booking says the rate was charged at booking while this charge is dated the stay day: confirm there's no double charge |
-| 0010 | Visa 10.5 | Read the rules carefully | Accept liability | High | 10.5 can only be fought by proving miscoding; the genuine-looking evidence doesn't count |
-
-With only 10 cases there's no held-out set, so treat 10/10 as a sanity check rather than a benchmark. Between runs the variation shows up in flags and confidence, not in the actions. On one earlier run the model argued to represent 0010; the rule in code held the outcome and flagged the case "Needs judgement", which is what that safety net is for.
 
 ## Configuration
 

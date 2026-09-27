@@ -166,6 +166,7 @@ export interface Workup {
   }
   justification: string
   rationale: string
+  rationale_for?: Action
   merchant_requests: string[]
 }
 

@@ -11,8 +11,8 @@
   "note": null
  },
  "summary": {
-  "allegation": "The issuer says the cardholder received a Carlton armchair with a structural fault, a wobbling frame and a leg that is not properly seated, that it is not fit for purpose, and that the merchant ignored their refund request.",
-  "to_defend": "The merchant must show its published description of the item, evidence that what was delivered matched that description and was not defective, and evidence that a return or refund route was offered and not used, or that the cardholder kept using the item after complaining."
+  "allegation": "The cardholder says the Carlton armchair delivered has a structural fault, the frame wobbles and one leg is not properly seated, that it is not fit for purpose, and that the merchant did not respond to their refund request.",
+  "to_defend": "Visa 13.3 requires the published description of the item purchased, evidence that what was delivered matched that description, and evidence that a return or refund route was offered and not used or that the cardholder kept using the item after complaining."
  },
  "requirements": [
   {
@@ -21,23 +21,29 @@
    "text": "The merchant's published description of the item the cardholder purchased.",
    "verdict": "satisfied",
    "ai_verdict": "satisfied",
-   "finding": "The product listing snapshot generated from the product page on 15 April 2025, the transaction date, gives the exact item, SKU HH-ARM-CARL-SG, and price of £329.00 matching the disputed amount, with full specifications of frame, legs, seat height and weight limit.",
+   "finding": "The listing snapshot, generated from the product page on the transaction date, gives the full published description of the Carlton Mid-Century Armchair in sage velvet at £329.00, matching the disputed amount.",
    "gap": "",
    "fixable": false,
    "citations": [
     {
      "page_id": "D1-p1",
-     "quote": "Product: Carlton Mid-Century Armchair, Sage Velvet",
+     "quote": "The Carlton armchair combines a hand-finished beech frame with deep-buttoned\nsage velvet upholstery. Tapered solid oak legs. Seat height 46cm.",
      "doc_key": "D1",
      "page_no": 1,
      "verified": true,
      "match": "exact",
      "rects": [
       [
+       0.23119,
+       0.22776,
+       0.83565,
+       0.24765
+      ],
+      [
        0.12851,
-       0.14462,
-       0.52935,
-       0.16459
+       0.24202,
+       0.62376,
+       0.2619
       ]
      ],
      "source": "text",
@@ -45,17 +51,17 @@
     },
     {
      "page_id": "D1-p1",
-     "quote": "Tapered solid oak legs. Seat height 46cm. Maximum recommended user",
+     "quote": "Listing snapshot generated from the product page as of 15 April 2025.",
      "doc_key": "D1",
      "page_no": 1,
      "verified": true,
      "match": "exact",
      "rects": [
       [
-       0.30498,
-       0.24202,
-       0.8506,
-       0.2619
+       0.12851,
+       0.35152,
+       0.54965,
+       0.36795
       ]
      ],
      "source": "text",
@@ -64,7 +70,8 @@
    ],
    "downgraded": null,
    "date_check": null,
-   "vision_only": false
+   "vision_only": false,
+   "hard_to_read": false
   },
   {
    "id": "R2",
@@ -72,8 +79,8 @@
    "text": "Evidence the item delivered matches that description (photos, specs, serial number match).",
    "verdict": "partial",
    "ai_verdict": "partial",
-   "finding": "The delivery photo shows a sage Carlton armchair delivered on 18 April 2025, which matches the listed colour and model, but it is a straight-on front view only with no sides, underside, legs, packaging or serial or order identifier, so it cannot show the frame or leg seating that the cardholder says is faulty.",
-   "gap": "No pre-dispatch or quality control images of the frame, legs and underside, no serial or order number tying the photographed chair to txn_6634KL, and nothing rebutting the specific structural fault alleged.",
+   "finding": "The delivery photo shows a sage armchair with dark legs delivered on 18 Apr 2025, which is consistent with the listed colour and style, but it is a front view only with no SKU or serial reference, no view of the legs, underside or frame, and so it cannot show the item was free of the alleged structural fault.",
+   "gap": "No pre-dispatch or delivery imagery of the legs, underside and frame joint, no SKU or serial match, and no QA or inspection record tying a specific unit to this order.",
    "fixable": true,
    "citations": [
     {
@@ -115,7 +122,8 @@
    ],
    "downgraded": null,
    "date_check": null,
-   "vision_only": true
+   "vision_only": true,
+   "hard_to_read": false
   },
   {
    "id": "R3",
@@ -123,32 +131,14 @@
    "text": "Evidence the merchant offered a return/refund route and the cardholder did not use it, OR evidence the cardholder used and retained the merchandise after raising the complaint.",
    "verdict": "missing",
    "ai_verdict": "missing",
-   "finding": "Only the generic published returns policy is supplied, which offers free collection and repair, replacement or refund for defective items reported within 7 days; there is no record that this route was communicated to or declined by this cardholder, no correspondence log from returns@havenhome.example, and no evidence the cardholder kept using the chair after complaining.",
-   "gap": "No customer service ticket history, email trail or collection record for this order showing a return or refund route was actually offered to the cardholder and not used.",
+   "finding": "Only a generic returns policy page is supplied; there is no record that the merchant offered this cardholder a collection, repair, replacement or refund for this order, no correspondence log, and no evidence the cardholder continued to use and retain the armchair after complaining.",
+   "gap": "Missing the returns@havenhome.example correspondence for this order, any collection or repair offer sent to the cardholder, and any evidence of continued use or retention after the complaint.",
    "fixable": true,
-   "citations": [
-    {
-     "page_id": "D3-p1",
-     "quote": "Defective items: please email returns@havenhome.example within 7 days of delivery with photos",
-     "doc_key": "D3",
-     "page_no": 1,
-     "verified": true,
-     "match": "exact",
-     "rects": [
-      [
-       0.12851,
-       0.17787,
-       0.85456,
-       0.19776
-      ]
-     ],
-     "source": "text",
-     "relocated": false
-    }
-   ],
+   "citations": [],
    "downgraded": null,
    "date_check": null,
-   "vision_only": false
+   "vision_only": false,
+   "hard_to_read": false
   }
  ],
  "score": {
@@ -162,7 +152,7 @@
    "kind": "pdf",
    "error": null,
    "is_new": false,
-   "label": "Product listing snapshot with specs",
+   "label": "Product listing snapshot, Carlton armchair",
    "relevance": "used",
    "reason": "",
    "pages": [
@@ -200,9 +190,9 @@
    "kind": "pdf",
    "error": null,
    "is_new": false,
-   "label": "Published returns and defect policy",
-   "relevance": "used",
-   "reason": "",
+   "label": "Generic returns policy page",
+   "relevance": "not_relevant",
+   "reason": "Undated template policy last updated January 2025; it contains no record of this cardholder contacting the merchant or of any refund or collection offer for this order.",
    "pages": [
     {
      "page_no": 1,
@@ -218,7 +208,7 @@
   {
    "type": "conflict",
    "severity": "warn",
-   "text": "The cardholder states the merchant did not respond to their refund request; the file contains only the generic returns policy and no correspondence, ticket or collection record answering that point."
+   "text": "The cardholder states the merchant did not respond to a refund request; the file contains no email or ticket record from returns@havenhome.example for this order, so the analyst should confirm whether any response exists before filing."
   },
   {
    "type": "vision",
@@ -233,12 +223,9 @@
   {
    "label": "delivery",
    "date": "2025-04-18",
-   "page_id": "D2-p1"
-  },
-  {
-   "label": "other",
-   "date": "2025-04-15",
-   "page_id": "D1-p1"
+   "page_id": "D2-p1",
+   "quote": "Carlton Armchair (Sage) — delivered 18 Apr 2025",
+   "verified": true
   }
  ],
  "decision": {
@@ -253,17 +240,40 @@
     "Key evidence read from an image",
     "Evidence conflicts with the claim or the transaction data"
    ],
-   "notes": []
+   "notes": [],
+   "checks": [
+    {
+     "label": "Key evidence comes from document text, not only from an image",
+     "passed": false
+    },
+    {
+     "label": "Images the evidence relies on are fully legible",
+     "passed": true
+    },
+    {
+     "label": "Every quoted passage was found in the documents",
+     "passed": true
+    },
+    {
+     "label": "No conflict in the evidence",
+     "passed": false
+    },
+    {
+     "label": "The rule check and the AI recommendation agree",
+     "passed": true
+    }
+   ]
   }
  },
- "justification": "The description is proven but the condition evidence is a single front view photo and nothing shows the returns route was offered to this cardholder, and both gaps are records the merchant should hold.",
- "rationale": "The cardholder alleges the £329.00 Carlton armchair bought on 15 April 2025 arrived with a wobbling frame and a badly seated leg and that their refund request was ignored.\nThe listing snapshot dated 15 April 2025 establishes the published description, SKU HH-ARM-CARL-SG at £329.00, so requirement R1 is met.\nThe only condition evidence is a driver photo of the chair delivered on 18 April 2025 taken front on, which shows colour and model but cannot show the frame or leg seating in dispute.\nThe returns policy is a policy statement only and does not show that a collection, repair, replacement or refund was actually offered to this cardholder or declined by them.\nRepresentment should be held until the merchant supplies pre-dispatch condition images and the customer contact record for this order.",
+ "justification": "R3 is unmet and R2 only partial; both gaps are the kind the merchant can close with correspondence and condition records, so hold representment pending those documents.",
+ "rationale": "Cardholder alleges the £329.00 Carlton armchair delivered on 18 April 2025 has a wobbling frame and a badly seated leg and that no refund response was given.\nThe published listing for SKU HH-ARM-CARL-SG at £329.00 matches the disputed transaction txn_6634KL of 15 April 2025, so the description requirement is met.\nThe only condition evidence is a front-view driver photo with no SKU, serial or view of the legs or frame, so it cannot rebut the structural fault claim.\nNo correspondence, collection offer or continued-use evidence has been supplied, leaving the return or refund route requirement unmet.\nRequest the missing records before representing; on the current file the case would likely fail.",
  "merchant_requests": [
-  "Pre-dispatch or quality control photographs of SKU HH-ARM-CARL-SG for this order showing the frame, all four legs and the underside, with order or batch identifier visible",
-  "Full customer service record for the order behind txn_6634KL dated 15 April 2025, including all inbound and outbound emails to and from returns@havenhome.example between 18 April and 8 May 2025",
-  "Any collection, inspection or engineer report raised after the cardholder reported the defect, or a written statement that no such request was received",
-  "Signed delivery note or carrier proof of delivery for 18 April 2025 showing order number, delivery address BS8 1TR and any condition notes taken at handover",
-  "Evidence of any refund, replacement or repair offer made to the cardholder and the cardholder's response"
+  "Full email or ticket thread from returns@havenhome.example for this order between 18 April and 8 May 2025, including any response to the cardholder's refund request.",
+  "Any written offer of free collection, repair, replacement or refund sent to the cardholder for order SKU HH-ARM-CARL-SG, with the date sent.",
+  "Pre-dispatch QA or warehouse photographs of the specific unit shipped, showing the legs, underside and frame joint, with the unit or serial identifier linked to this order.",
+  "Proof of delivery document with signature or recipient name and delivery address for the 18 April 2025 delivery to postcode BS8 1TR.",
+  "Any evidence the cardholder retained or continued to use the armchair after raising the complaint, for example a declined collection slot or a failed collection record."
  ],
- "model": "claude-opus-5"
+ "model": "claude-opus-5",
+ "rationale_for": "request_more_evidence"
 }

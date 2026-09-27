@@ -75,7 +75,7 @@ The recommendation is **Accept liability** with **High** confidence. A merchant 
 
 ![No-show case](docs/screenshots/09-case-no-show.png)
 
-Case **CB-2025-0009** (hotel no-show) meets all four requirements. But reading the booking and the log together turns up a timing problem: the booking says the non-refundable rate was **charged at booking** on 12 March, while the disputed charge is dated **26 April**, before check-in time and before the guest was marked a no-show. The recommendation stays **Represent**, confidence drops to **Medium**, and the chip tells the analyst what to confirm before filing: that this is the only 215 EUR charge on the booking.
+Case **CB-2025-0009** (hotel no-show) meets all four requirements. But reading the booking and the log together turns up a timing problem: the booking says the non-refundable rate was **charged at booking** on 12 March, while the disputed charge is dated **26 April**, before check-in time and before the guest was marked a no-show. The recommendation stays **Represent** and a **Data check** chip tells the analyst what to confirm before filing: that this is the only 215 EUR charge on the booking. It's a data mismatch rather than evidence against the claim, so it's shown without lowering confidence.
 
 ---
 
@@ -87,7 +87,7 @@ Case **CB-2025-0010** is Visa **10.5** (fraud monitoring). The merchant uploaded
 
 - The **Rule decides outcome** chip says so up front, and both documents are marked not relevant.
 - The single requirement (proof of miscoding) is **Missing** and not fixable, so the recommendation is **Accept liability** with High confidence.
-- The rule is enforced **in code**, not just in the prompt. On an earlier run the model was persuaded by the evidence and argued for representing: the recommendation still came out as Accept liability, and the case was flagged **Needs judgement** with both views side by side.
+- The rule is enforced **in code**, not just in the prompt. On an earlier run the model was persuaded by the evidence and argued for representing: the recommendation still came out as Accept liability, and the case was flagged **Needs judgement** with both views side by side. The rationale is then rewritten so the text to file argues for accepting.
 
 ---
 

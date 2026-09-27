@@ -11,8 +11,8 @@
   "note": null
  },
  "summary": {
-  "allegation": "The issuer says the cardholder did not authorise the 1,240.50 EUR charge of 1 April 2025 and suggests the card details were compromised.",
-  "to_defend": "Mastercard requires any two of the listed compelling evidence items showing the genuine cardholder authorised or benefited from the transaction."
+  "allegation": "The issuer says the cardholder did not authorise the 1,240.50 EUR charge of 1 April 2025 and suggests their card details were compromised.",
+  "to_defend": "Mastercard requires any two of: full AVS plus CVV match, successful Identity Check authentication, two prior undisputed transactions, or signed proof of delivery to the billing address."
  },
  "requirements": [
   {
@@ -21,7 +21,7 @@
    "text": "AVS match (full address) AND CVV match on the disputed transaction.",
    "verdict": "satisfied",
    "ai_verdict": "satisfied",
-   "finding": "The transaction metadata and the gateway authorisation log both show a full address AVS match (Y) and a CVV match (M) on txn_4412EF.",
+   "finding": "Transaction metadata records avs_result Y (full address match) and cvv_result M (match), and the gateway authorisation log for txn_4412EF confirms both checks passed at authorisation.",
    "gap": "",
    "fixable": false,
    "citations": [
@@ -86,7 +86,8 @@
    ],
    "downgraded": null,
    "date_check": null,
-   "vision_only": false
+   "vision_only": false,
+   "hard_to_read": false
   },
   {
    "id": "R2",
@@ -94,7 +95,7 @@
    "text": "3D Secure authentication completed successfully (Mastercard SecureCode / Identity Check).",
    "verdict": "satisfied",
    "ai_verdict": "satisfied",
-   "finding": "Mastercard Identity Check authentication completed successfully for txn_4412EF with ECI 02 and an authentication value present, timestamped 2025-04-01 11:08:18 UTC, seconds before authorisation.",
+   "finding": "Mastercard Identity Check completed successfully for txn_4412EF with ECI 02, an authentication value present and a DS transaction ID, authenticated frictionlessly by the issuer BNP Paribas at 11:08:18 UTC on 1 April 2025.",
    "gap": "",
    "fixable": false,
    "citations": [
@@ -118,23 +119,17 @@
     },
     {
      "page_id": "D2-p1",
-     "quote": "This record certifies that the cardholder was authenticated by their issuing bank under Mastercard\nIdentity Check (3D Secure 2).",
+     "quote": "ECI\n02",
      "doc_key": "D2",
      "page_no": 1,
      "verified": true,
      "match": "exact",
      "rects": [
       [
-       0.12851,
-       0.38218,
-       0.85901,
-       0.40206
-      ],
-      [
-       0.12851,
-       0.39643,
-       0.35389,
-       0.41631
+       0.12661,
+       0.27417,
+       0.43417,
+       0.29251
       ]
      ],
      "source": "text",
@@ -154,7 +149,8 @@
    ],
    "downgraded": null,
    "date_check": null,
-   "vision_only": false
+   "vision_only": false,
+   "hard_to_read": false
   },
   {
    "id": "R3",
@@ -162,13 +158,14 @@
    "text": "Two prior undisputed transactions from the same cardholder with this merchant in the past 12 months, with matching billing details.",
    "verdict": "missing",
    "ai_verdict": "missing",
-   "finding": "No transaction history for this cardholder with Velo Continental Rentals was provided; the only supporting hint is a device fingerprint noted as seen three times, which does not identify two prior undisputed transactions with matching billing details.",
-   "gap": "No record of two prior undisputed transactions in the past 12 months with matching billing details.",
+   "finding": "No record of any prior transaction by this cardholder with Velo Continental Rentals was supplied; the only related datum is a device fingerprint noted as a \"Returning device (seen 3x)\", which does not identify two prior undisputed transactions or matching billing details.",
+   "gap": "No transaction history listing two prior undisputed purchases in the past 12 months with matching billing details.",
    "fixable": true,
    "citations": [],
    "downgraded": null,
    "date_check": null,
-   "vision_only": false
+   "vision_only": false,
+   "hard_to_read": false
   },
   {
    "id": "R4",
@@ -176,13 +173,14 @@
    "text": "Proof of delivery to the cardholder's billing address with signature.",
    "verdict": "not_applicable",
    "ai_verdict": "not_applicable",
-   "finding": "The merchant is a vehicle rental business (MCC 7512) and the disputed charge is for a rental service, so there are no shipped goods and no signed proof of delivery to provide.",
+   "finding": "MCC 7512 is vehicle rental and the record shows a rental service rather than a shipped item, so there is no consignment that could carry signed proof of delivery to the billing address.",
    "gap": "",
    "fixable": false,
    "citations": [],
    "downgraded": null,
    "date_check": null,
-   "vision_only": false
+   "vision_only": false,
+   "hard_to_read": false
   }
  ],
  "score": {
@@ -196,7 +194,7 @@
    "kind": "pdf",
    "error": null,
    "is_new": false,
-   "label": "Gateway authorisation log with AVS/CVV",
+   "label": "Gateway authorisation log, AVS/CVV/3DS",
    "relevance": "used",
    "reason": "",
    "pages": [
@@ -215,7 +213,7 @@
    "kind": "pdf",
    "error": null,
    "is_new": false,
-   "label": "Mastercard Identity Check authentication record",
+   "label": "Identity Check authentication record",
    "relevance": "used",
    "reason": "",
    "pages": [
@@ -230,13 +228,7 @@
   }
  ],
  "alerts": [],
- "key_dates": [
-  {
-   "label": "other",
-   "date": "2025-04-01",
-   "page_id": "TXN"
-  }
- ],
+ "key_dates": [],
  "decision": {
   "action": "represent",
   "code_action": "represent",
@@ -248,11 +240,34 @@
    "reasons": [
     "Every requirement the decision relies on is backed by verified evidence"
    ],
-   "notes": []
+   "notes": [],
+   "checks": [
+    {
+     "label": "Key evidence comes from document text, not only from an image",
+     "passed": true
+    },
+    {
+     "label": "Images the evidence relies on are fully legible",
+     "passed": true
+    },
+    {
+     "label": "Every quoted passage was found in the documents",
+     "passed": true
+    },
+    {
+     "label": "No conflict in the evidence",
+     "passed": true
+    },
+    {
+     "label": "The rule check and the AI recommendation agree",
+     "passed": true
+    }
+   ]
   }
  },
- "justification": "Two of the four requirements are clearly satisfied, which meets the code's any-two threshold.",
- "rationale": "The issuer alleges the cardholder did not authorise the 1,240.50 EUR charge on txn_4412EF dated 1 April 2025.\nThe gateway authorisation log shows a full address AVS match (Y) and a CVV match (M) for that transaction ID and amount.\nThe Mastercard Identity Check record ic_77f31a82bb confirms the issuing bank, BNP Paribas, authenticated the cardholder frictionlessly at 2025-04-01 11:08:18 UTC with ECI 02 and an authentication value present, four seconds before authorisation.\nBilling and shipping postcodes match at 75011 and the Paris IP address 90.84.21.117 is consistent with an FR-issued card.\nTwo of the four compelling evidence requirements are satisfied, meeting the any-two threshold, so the case should be represented.",
+ "justification": "Represent: R1 (full AVS and CVV match) and R2 (successful Identity Check authentication) are both satisfied, meeting the any-two threshold for 4837.",
+ "rationale": "The issuer alleges the 1,240.50 EUR charge of 1 April 2025 (txn_4412EF) was not authorised by the cardholder.\nThe gateway authorisation log shows a full address AVS match (Y) and a CVV match (M) on that same transaction.\nMastercard Identity Check authenticated the cardholder frictionlessly at 11:08:18 UTC on 1 April 2025, ECI 02, authentication value present, DS transaction ID ds_4b2e1100c4, issuer BNP Paribas.\nBilling and shipping postcodes both read 75011 and the Paris IP 90.84.21.117 is consistent with an FR-issued card.\nTwo of the four requirements are satisfied, so the case meets the threshold to represent.",
  "merchant_requests": [],
- "model": "claude-opus-5"
+ "model": "claude-opus-5",
+ "rationale_for": "represent"
 }
