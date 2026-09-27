@@ -485,7 +485,11 @@ function AnalysisView({ detail, viewingOld }: { detail: CaseDetail; viewingOld: 
             docs={docs}
             cites={cites}
             activeDoc={activeDoc}
-            onActiveDoc={setActiveDoc}
+            onActiveDoc={(key) => {
+              setActiveDoc(key)
+              // Moving to another document drops the selection there, so its highlights aren't dimmed.
+              setActive((a) => (a && a.c.doc_key !== key ? null : a))
+            }}
             active={active}
             focusNonce={focusNonce}
             hoveredReq={hoveredReq}

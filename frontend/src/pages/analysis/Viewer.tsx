@@ -49,10 +49,12 @@ export function Viewer(props: ViewerProps) {
   const { docs, cites, activeDoc, onActiveDoc, active, readOnly } = props
   const doc = docs.find((d) => d.doc_key === activeDoc) ?? docs[0]
 
-  // A citation in another document switches the tab; the pane itself then scrolls to it.
+  // Selecting a citation opens its document; the pane itself then scrolls to it. This runs only when a
+  // citation is selected, not when the tab changes, so the analyst can still switch to another document.
   useEffect(() => {
-    if (active?.c.doc_key && active.c.doc_key !== doc?.doc_key) onActiveDoc(active.c.doc_key)
-  }, [active, doc?.doc_key, onActiveDoc])
+    if (active?.c.doc_key) onActiveDoc(active.c.doc_key)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, props.focusNonce])
 
   const counts = useMemo(() => {
     const out: Record<string, number> = {}
