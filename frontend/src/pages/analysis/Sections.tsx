@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Check, ChevronDown, Copy, History, Info, Mail, MessageSquareQuote, Plus, RotateCcw, Scale, Sparkles, Wrench, X } from 'lucide-react'
+import { Check, ChevronDown, Copy, History, Info, Mail, MessageSquareQuote, Plus, RotateCcw, Scale, Sparkles, X } from 'lucide-react'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { ACTION, ConfidenceMeter, SchemeBadge, VERDICT } from '../../components/status'
 import { Button, Card, SectionTitle, Tooltip } from '../../components/ui'
@@ -15,8 +15,6 @@ export interface DefendItem {
   title: string
   text: string
   verdict: Verdict
-  gap: string
-  fixable: boolean
 }
 
 type Logic = Workup['rule']['logic']
@@ -31,23 +29,6 @@ const LOGIC_HELP: Record<Exclude<Logic, 'AUTO_ACCEPT'>, string> = {
 function needed(logic: Logic, items: DefendItem[]) {
   if (logic === 'ALL') return items.filter((i) => i.verdict !== 'not_applicable').length
   return logic === 'ANY_TWO' ? 2 : 1
-}
-
-/** Whether a gap could be closed by asking the merchant, with the reason on hover. */
-export function FixTag({ fixable }: { fixable: boolean }) {
-  return (
-    <Tooltip
-      text={
-        fixable
-          ? 'The merchant could supply this, so it goes on the request list.'
-          : 'The facts can’t change (for example a failed check), so more documents won’t help.'
-      }
-    >
-      <span className={clsx('ml-1.5 rounded px-1.5 py-px text-[10.5px] font-semibold whitespace-nowrap', fixable ? 'bg-warn-soft text-warn' : 'bg-line-2 text-muted')}>
-        {fixable ? 'Merchant can fix' : 'Can’t be fixed'}
-      </span>
-    </Tooltip>
-  )
 }
 
 export function ReasonSection({ workup, kase, items, onPick }: { workup: Workup; kase: Case; items: DefendItem[]; onPick: (id: string) => void }) {
@@ -101,7 +82,6 @@ export function ReasonSection({ workup, kase, items, onPick }: { workup: Workup;
               <ul className="divide-y divide-line-2 overflow-hidden rounded-xl border border-line">
                 {items.map((it) => {
                   const v = VERDICT[it.verdict]
-                  const open = (it.verdict === 'partial' || it.verdict === 'missing') && it.gap
                   return (
                     <li key={it.id}>
                       <button onClick={() => onPick(it.id)} className="flex w-full items-start gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-[#fafbfd]">
@@ -112,19 +92,6 @@ export function ReasonSection({ workup, kase, items, onPick }: { workup: Workup;
                             <span className={clsx('text-[13.5px] font-medium', it.verdict === 'not_applicable' ? 'text-muted line-through decoration-muted/40' : 'text-text')}>{it.title}</span>
                           </span>
                           <span className="mt-0.5 block text-[12.5px] leading-snug text-muted">{it.text}</span>
-                          {open && met && rule.logic !== 'ALL' && (
-                            <span className="mt-1 block text-[12px] text-muted">Not needed: enough items are already proven.</span>
-                          )}
-                          {open && !(met && rule.logic !== 'ALL') && (
-                            <span className={clsx('mt-1.5 flex items-start gap-1.5 rounded-md px-2 py-1 text-[12.5px] leading-snug text-text-2', it.verdict === 'missing' ? 'bg-bad-soft/50' : 'bg-warn-soft/50')}>
-                              <Wrench className="mt-0.5 size-3.5 shrink-0 text-muted" />
-                              <span>
-                                <span className="font-semibold text-text">{it.verdict === 'missing' ? 'Missing: ' : 'Still needed: '}</span>
-                                {it.gap}
-                                <FixTag fixable={it.fixable} />
-                              </span>
-                            </span>
-                          )}
                         </span>
                         <Tooltip text={v.hint}>
                           <span className={clsx('mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold', v.cls)}>{v.label}</span>

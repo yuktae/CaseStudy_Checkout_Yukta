@@ -382,7 +382,7 @@ function AnalysisView({ detail, viewingOld }: { detail: CaseDetail; viewingOld: 
               <ReasonSection
                 workup={workup}
                 kase={kase}
-                items={workup.requirements.map((r) => ({ id: r.id, title: r.title, text: r.text, verdict: verdictOf(r), gap: r.gap, fixable: r.fixable }))}
+                items={workup.requirements.map((r) => ({ id: r.id, title: r.title, text: r.text, verdict: verdictOf(r) }))}
                 onPick={selectRequirement}
               />
             </div>

@@ -5,11 +5,14 @@ import {
   CalendarCheck,
   CalendarX,
   ChevronDown,
+  CircleCheck,
   Database,
   Eye,
   FileText,
   ImageIcon,
   Info,
+  Lock,
+  MailPlus,
   Pencil,
   RotateCcw,
   ShieldAlert,
@@ -40,6 +43,9 @@ export function EvidenceSection(props: EvidenceProps) {
   const applicable = workup.requirements.filter((r) => verdictOf(r) !== 'not_applicable')
   const satisfied = applicable.filter((r) => verdictOf(r) === 'satisfied').length
   const notUsed = docs.filter((d) => !d.pending && (d.relevance === 'not_relevant' || d.error))
+  // With "any two" or "any one" rules, once enough is proven the remaining gaps don't matter.
+  const need = workup.rule.logic === 'ANY_TWO' ? 2 : 1
+  const enoughProven = ['ANY_TWO', 'ANY_ONE', 'EITHER'].includes(workup.rule.logic) && satisfied >= need
 
   return (
     <section>
@@ -64,7 +70,7 @@ export function EvidenceSection(props: EvidenceProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 + i * 0.05, duration: 0.25 }}
           >
-            <RequirementCard {...props} req={r} />
+            <RequirementCard {...props} req={r} enoughProven={enoughProven} />
           </motion.div>
         ))}
         {notUsed.length > 0 && (
@@ -88,7 +94,7 @@ export function EvidenceSection(props: EvidenceProps) {
   )
 }
 
-function RequirementCard({ req, docs, previous, verdictOf, override, onOverride, cites, active, onActivate, onHover, flashReq, readOnly }: EvidenceProps & { req: Requirement }) {
+function RequirementCard({ req, docs, previous, verdictOf, override, onOverride, cites, active, onActivate, onHover, flashReq, readOnly, enoughProven }: EvidenceProps & { req: Requirement; enoughProven: boolean }) {
   const verdict = verdictOf(req)
   const ov = override(req.id)
   const mine = cites.filter((c) => c.reqId === req.id)
@@ -170,6 +176,37 @@ function RequirementCard({ req, docs, previous, verdictOf, override, onOverride,
           )}
         </div>
       ) : null}
+
+      {(verdict === 'partial' || verdict === 'missing') && req.gap && (
+        <GapFooter gap={req.gap} fixable={req.fixable} partial={verdict === 'partial'} notNeeded={enoughProven} />
+      )}
+    </div>
+  )
+}
+
+/** What the evidence still lacks, and whether asking the merchant can close the gap. */
+function GapFooter({ gap, fixable, partial, notNeeded }: { gap: string; fixable: boolean; partial: boolean; notNeeded: boolean }) {
+  if (notNeeded) {
+    return (
+      <p className="mt-3 flex items-center gap-2 border-t border-line-2 pt-3 text-[12.5px] text-muted">
+        <CircleCheck className="size-3.5 shrink-0 text-ok" />
+        Not needed for this case: enough requirements are already proven.
+      </p>
+    )
+  }
+  return (
+    <div className="mt-4 overflow-hidden rounded-xl border border-line">
+      <div className="px-3.5 py-2.5">
+        <p className="text-[11px] font-semibold tracking-wide text-muted uppercase">{partial ? 'Still needed' : 'What’s missing'}</p>
+        <p className="mt-1 text-[13px] leading-snug text-text">{gap}</p>
+      </div>
+      <div className={clsx('flex items-start gap-2 border-t px-3.5 py-2 text-[12.5px] leading-snug', fixable ? 'border-warn/15 bg-warn-soft/70 text-warn' : 'border-line bg-line-2/70 text-text-2')}>
+        {fixable ? <MailPlus className="mt-px size-3.5 shrink-0" /> : <Lock className="mt-px size-3.5 shrink-0" />}
+        <span>
+          <span className="font-semibold">{fixable ? 'The merchant can fix this.' : 'This can’t be fixed.'}</span>{' '}
+          {fixable ? 'Ask them for it and add it with Add evidence.' : 'The facts won’t change, so more documents won’t help.'}
+        </span>
+      </div>
     </div>
   )
 }
