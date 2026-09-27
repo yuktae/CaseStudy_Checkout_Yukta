@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Check, ChevronDown, Copy, History, Info, Mail, MessageSquareQuote, Plus, RotateCcw, Scale, Sparkles, X } from 'lucide-react'
+import { ChevronDown, Copy, History, Mail, MessageSquareQuote, Plus, RotateCcw, Scale, Sparkles, X } from 'lucide-react'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { ACTION, ConfidenceMeter, SchemeBadge, VERDICT } from '../../components/status'
 import { Button, Card, SectionTitle, Tooltip } from '../../components/ui'
@@ -343,48 +343,8 @@ export function ActionSection({ workup, action, onAction, reason, onReason, just
           )}
         </AnimatePresence>
 
-        <ConfidenceBreakdown confidence={d.confidence} />
       </div>
     </section>
-  )
-}
-
-/** How the confidence label was reached: every check, passed or failed, and the notes that don't count. */
-function ConfidenceBreakdown({ confidence }: { confidence: Workup['decision']['confidence'] }) {
-  const checks = confidence.checks
-  return (
-    <div className="mt-4 border-t border-white/15 pt-3 text-[12.5px]">
-      <p className="text-[11px] font-semibold tracking-wide text-white/60 uppercase">How confidence is worked out</p>
-      {checks ? (
-        <>
-          <p className="mt-1 leading-snug text-white/70">Starts at High. Each failed check lowers it one level: none failed is High, one is Medium, two or more is Low.</p>
-          <ul className="mt-2 space-y-1">
-            {checks.map((c) => (
-              <li key={c.label} className="flex items-start gap-2">
-                {c.passed ? <Check className="mt-0.5 size-3.5 shrink-0 text-[#86efac]" strokeWidth={2.6} /> : <X className="mt-0.5 size-3.5 shrink-0 text-[#fca5a5]" strokeWidth={2.6} />}
-                <span className={c.passed ? 'text-white/80' : 'font-semibold text-white'}>{c.label}</span>
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : (
-        <ul className="mt-2 space-y-1 text-white/80">
-          {confidence.reasons.map((r) => (
-            <li key={r}>{r}</li>
-          ))}
-        </ul>
-      )}
-      {confidence.notes.length > 0 && (
-        <ul className="mt-2 space-y-1 text-white/60">
-          {confidence.notes.map((n) => (
-            <li key={n} className="flex items-start gap-2">
-              <Info className="mt-0.5 size-3.5 shrink-0" />
-              <span>{n} (for information, doesn’t change confidence)</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
   )
 }
 

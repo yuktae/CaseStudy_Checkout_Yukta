@@ -5,6 +5,7 @@ import {
   CalendarCheck,
   CalendarX,
   ChevronDown,
+  CircleAlert,
   CircleCheck,
   Database,
   Eye,
@@ -17,7 +18,7 @@ import {
   RotateCcw,
   ShieldAlert,
 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { Card, SectionTitle, Tooltip } from '../../components/ui'
 import { VERDICT, VerdictBadge } from '../../components/status'
 import type { Requirement, Verdict, Workup } from '../../lib/types'
@@ -141,10 +142,14 @@ function RequirementCard({ req, docs, previous, verdictOf, override, onOverride,
           onChange={(v, note) => onOverride(req.id, v, note)} />
       </div>
 
-      <p className="mt-2.5 text-[13.5px] leading-relaxed text-text-2">{req.finding}</p>
+      <div className="mt-3">
+        <BlockLabel>Assessment</BlockLabel>
+        <p className="text-[13.5px] leading-relaxed text-text-2">{req.finding}</p>
+      </div>
 
       {mine.length > 0 && (
-        <div className="mt-3 flex flex-col gap-2">
+        <div className="mt-3.5 flex flex-col gap-2">
+          <BlockLabel>Evidence found</BlockLabel>
           {mine.map((c) => (
             <EvidenceChip key={c.key} cite={c} docs={docs} active={active?.key === c.key} onClick={() => onActivate(c)} />
           ))}
@@ -185,27 +190,39 @@ function RequirementCard({ req, docs, previous, verdictOf, override, onOverride,
 }
 
 /** What the evidence still lacks, and whether asking the merchant can close the gap. */
+function BlockLabel({ children }: { children: ReactNode }) {
+  return <p className="mb-1 text-[11px] font-semibold tracking-wide text-muted uppercase">{children}</p>
+}
+
+/** What the evidence still lacks, and how (or whether) the gap can be closed. */
 function GapFooter({ gap, fixable, partial, notNeeded }: { gap: string; fixable: boolean; partial: boolean; notNeeded: boolean }) {
   if (notNeeded) {
     return (
-      <p className="mt-3 flex items-center gap-2 border-t border-line-2 pt-3 text-[12.5px] text-muted">
+      <p className="mt-4 flex items-center gap-2 border-t border-line-2 pt-3 text-[12.5px] text-muted">
         <CircleCheck className="size-3.5 shrink-0 text-ok" />
         Not needed for this case: enough requirements are already proven.
       </p>
     )
   }
   return (
-    <div className="mt-4 overflow-hidden rounded-xl border border-line">
-      <div className="px-3.5 py-2.5">
-        <p className="text-[11px] font-semibold tracking-wide text-muted uppercase">{partial ? 'Still needed' : 'What’s missing'}</p>
-        <p className="mt-1 text-[13px] leading-snug text-text">{gap}</p>
+    <div className="mt-4 grid overflow-hidden rounded-xl border border-line sm:grid-cols-2">
+      <div className="px-3.5 py-3">
+        <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-muted uppercase">
+          <CircleAlert className={clsx('size-3.5', partial ? 'text-warn' : 'text-bad')} />
+          {partial ? 'Still needed' : 'What’s missing'}
+        </p>
+        <p className="text-[13px] leading-snug text-text">{gap}</p>
       </div>
-      <div className={clsx('flex items-start gap-2 border-t px-3.5 py-2 text-[12.5px] leading-snug', fixable ? 'border-warn/15 bg-warn-soft/70 text-warn' : 'border-line bg-line-2/70 text-text-2')}>
-        {fixable ? <MailPlus className="mt-px size-3.5 shrink-0" /> : <Lock className="mt-px size-3.5 shrink-0" />}
-        <span>
-          <span className="font-semibold">{fixable ? 'The merchant can fix this.' : 'This can’t be fixed.'}</span>{' '}
-          {fixable ? 'Ask them for it and add it with Add evidence.' : 'The facts won’t change, so more documents won’t help.'}
-        </span>
+      <div className={clsx('border-t px-3.5 py-3 sm:border-t-0 sm:border-l', fixable ? 'border-warn/15 bg-warn-soft/70' : 'border-line bg-line-2/70')}>
+        <p className={clsx('mb-1 flex items-center gap-1.5 text-[11px] font-semibold tracking-wide uppercase', fixable ? 'text-warn' : 'text-text-2')}>
+          {fixable ? <MailPlus className="size-3.5" /> : <Lock className="size-3.5" />}
+          {fixable ? 'How to fix it' : 'Can’t be fixed'}
+        </p>
+        <p className="text-[13px] leading-snug text-text">
+          {fixable
+            ? 'Ask the merchant for what’s listed here, then upload it with Add evidence. The case is re-analysed with it.'
+            : 'These are facts of the transaction that won’t change, so more documents won’t help this requirement.'}
+        </p>
       </div>
     </div>
   )

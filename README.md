@@ -83,7 +83,7 @@ So it's a mix: PyMuPDF for PDF text and positions, a vision model to read images
 - Confidence is shown with its reasons, for example "key evidence read from an image".
 - "Not relevant" is kept separate from "missing", so a merchant's own fraud score shows as uploaded but irrelevant, with the reason.
 - Heads-up chips cover what's easy to miss: conflicts, deep pages, rules that decide the outcome, linked cases.
-- Every partial or missing requirement says what's still needed and whether the merchant could fix it.
+- Every partial or missing requirement ends with what's missing and how to fix it, or why it can't be fixed.
 
 **How confidence is calculated** (`decide.py`, `score_confidence`). Confidence is about the recommended action. It starts at High and each failed check lowers it one level (none failed: High, one: Medium, two or more: Low):
 
@@ -93,7 +93,7 @@ So it's a mix: PyMuPDF for PDF text and positions, a vision model to read images
 4. The rule check and the AI recommendation agree.
 5. When accepting a case that could be represented, no requirement is partly met (otherwise it may be closer than it looks).
 
-Data inconsistencies, such as a time-zone difference, are shown as notes but don't change the level. The case page lists every check with a tick or a cross.
+Data inconsistencies, such as a time-zone difference, are shown as notes but don't change the level. Hovering the confidence label on a case shows the reasons.
 
 ## Results on the 10 cases
 

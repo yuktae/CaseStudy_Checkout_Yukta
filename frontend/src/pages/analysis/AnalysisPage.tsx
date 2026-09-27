@@ -658,7 +658,19 @@ function Header({ detail, action, dirty, saving, readOnly, completed, onSave, on
                 </span>
               </Tooltip>
             )}
-            <Tooltip text="How sure the tool is about this recommendation. The checks behind it are under Recommended action." side="bottom">
+            <Tooltip
+              text={
+                <>
+                  <span className="font-semibold">Why {workup.decision.confidence.level.toLowerCase()} confidence</span>
+                  {workup.decision.confidence.reasons.map((r) => (
+                    <span key={r} className="block">
+                      {r}
+                    </span>
+                  ))}
+                </>
+              }
+              side="bottom"
+            >
               <ConfidenceMeter level={workup.decision.confidence.level} />
             </Tooltip>
           </div>
