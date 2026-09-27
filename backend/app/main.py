@@ -13,7 +13,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ValidationError
 
-from . import db, documents, pipeline, rules
+from . import db, decide, documents, pipeline, rules
 from .text import tidy
 from .config import DEMO_ACCESS_CODE, MAX_FILE_MB, MAX_FILES, MODEL, STATIC_DIR, SEED_ON_START, UPLOAD_DIR, has_api_key
 from .models import CaseIn
@@ -74,12 +74,21 @@ def _summary(case: dict, all_cases: list[dict]) -> dict:
     }
 
 
+def _explain(workup: dict | None) -> dict | None:
+    """Add what the analyst needs to read a workup: the reason code's definition and how confidence was reached."""
+    if not workup:
+        return workup
+    rule = rules.get_rule(workup["rule"]["scheme"], workup["rule"]["code"]) or {}
+    workup["rule"]["definition"] = rule.get("allegation")
+    return decide.explain_confidence(workup)
+
+
 def _detail(case_id: str, version: int | None = None) -> dict:
     case = db.get_case(case_id)
     if not case:
         raise HTTPException(404, "Case not found")
     all_cases = db.list_cases()
-    workup = tidy(db.get_workup(case_id, version))
+    workup = _explain(tidy(db.get_workup(case_id, version)))
     latest = db.list_versions(case_id)
     previous = None
     if workup and workup["version"] > 1:

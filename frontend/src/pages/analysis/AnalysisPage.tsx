@@ -30,7 +30,7 @@ import { useToast } from '../../components/toast'
 import { Button, Skeleton, Tooltip } from '../../components/ui'
 import { api } from '../../lib/api'
 import { dashboardPath } from '../../lib/filters'
-import { ACTION_LABEL, COMPLETE_LABEL, money, shortDate } from '../../lib/format'
+import { ACTION_LABEL, COMPLETE_HELP, COMPLETE_LABEL, money, shortDate } from '../../lib/format'
 import type { Action, Alert, CaseDetail, Requirement, Review, Signal, Verdict, Workup } from '../../lib/types'
 import { AddEvidenceDialog, type Gap } from './AddEvidence'
 import { EvidenceSection } from './Evidence'
@@ -382,7 +382,7 @@ function AnalysisView({ detail, viewingOld }: { detail: CaseDetail; viewingOld: 
               <ReasonSection
                 workup={workup}
                 kase={kase}
-                items={workup.requirements.map((r) => ({ id: r.id, title: r.title, text: r.text, verdict: verdictOf(r) }))}
+                items={workup.requirements.map((r) => ({ id: r.id, title: r.title, text: r.text, verdict: verdictOf(r), gap: r.gap, fixable: r.fixable }))}
                 onPick={selectRequirement}
               />
             </div>
@@ -453,23 +453,6 @@ function AnalysisView({ detail, viewingOld }: { detail: CaseDetail; viewingOld: 
                 </div>
               )}
             </AnimatePresence>
-
-            {!readOnly && (
-              <div className="flex items-center justify-between rounded-[var(--radius-card)] border border-line bg-surface px-5 py-4 shadow-[var(--shadow-card)]">
-                <span className="text-[13px] text-text-2">
-                  {dirty ? 'You have unsaved changes.' : 'All changes saved.'}
-                  {overrides > 0 && <span className="ml-1 text-muted">{overrides} override{overrides > 1 ? 's' : ''}.</span>}
-                </span>
-                <div className="flex gap-2">
-                  <Button icon={<Save className="size-4" />} onClick={save} loading={saving} disabled={!dirty}>
-                    Save
-                  </Button>
-                  <Button variant="dark" icon={<Gavel className="size-4" />} onClick={() => setDialog('complete')}>
-                    {COMPLETE_LABEL[action!]}
-                  </Button>
-                </div>
-              </div>
-            )}
 
             <ActivitySection activity={detail.activity} />
           </div>
@@ -542,6 +525,7 @@ function AnalysisView({ detail, viewingOld }: { detail: CaseDetail; viewingOld: 
         }
       >
         <div className="space-y-4 text-[13.5px]">
+          <p className="rounded-lg bg-blue-soft px-3 py-2 text-[12.5px] text-blue">{COMPLETE_HELP[action!]}</p>
           <div className="flex items-center justify-between">
             <span className="text-text-2">Final action</span>
             <ActionPill action={action!} />
@@ -674,7 +658,9 @@ function Header({ detail, action, dirty, saving, readOnly, completed, onSave, on
                 </span>
               </Tooltip>
             )}
-            <ConfidenceMeter level={workup.decision.confidence.level} />
+            <Tooltip text="How sure the tool is about this recommendation. The checks behind it are under Recommended action." side="bottom">
+              <ConfidenceMeter level={workup.decision.confidence.level} />
+            </Tooltip>
           </div>
         )}
         {detail.versions.length > 1 && (
@@ -696,21 +682,29 @@ function Header({ detail, action, dirty, saving, readOnly, completed, onSave, on
           </select>
         )}
         {completed ? (
-          <Button icon={<RotateCcw className="size-4" />} onClick={onReopen}>
-            Reopen
-          </Button>
+          <Tooltip text="Move the case back to review so it can be edited again." side="bottom">
+            <Button icon={<RotateCcw className="size-4" />} onClick={onReopen}>
+              Reopen
+            </Button>
+          </Tooltip>
         ) : (
           <>
-            <Button icon={<Plus className="size-4" />} onClick={onAddEvidence} disabled={readOnly}>
-              Add evidence
-            </Button>
-            <Button icon={<Save className="size-4" />} onClick={onSave} loading={saving} disabled={readOnly || !dirty} className="relative">
-              Save
-              {dirty && <span className="absolute -top-1 -right-1 size-2.5 rounded-full border-2 border-white bg-blue" />}
-            </Button>
-            <Button variant="dark" icon={<Gavel className="size-4" />} onClick={onComplete} disabled={readOnly || !workup}>
-              {COMPLETE_LABEL[action]}
-            </Button>
+            <Tooltip text="Upload more merchant files. The case is then re-analysed as a new version." side="bottom">
+              <Button icon={<Plus className="size-4" />} onClick={onAddEvidence} disabled={readOnly}>
+                Add evidence
+              </Button>
+            </Tooltip>
+            <Tooltip text={dirty ? 'Save your edits without deciding. The case moves to In review.' : 'Nothing to save yet.'} side="bottom">
+              <Button icon={<Save className="size-4" />} onClick={onSave} loading={saving} disabled={readOnly || !dirty} className="relative">
+                Save
+                {dirty && <span className="absolute -top-1 -right-1 size-2.5 rounded-full border-2 border-white bg-blue" />}
+              </Button>
+            </Tooltip>
+            <Tooltip text={`${COMPLETE_HELP[action]} You see a summary first.`} side="bottom">
+              <Button variant="dark" icon={<Gavel className="size-4" />} onClick={onComplete} disabled={readOnly || !workup}>
+                {COMPLETE_LABEL[action]}
+              </Button>
+            </Tooltip>
           </>
         )}
       </div>

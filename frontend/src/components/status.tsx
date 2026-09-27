@@ -4,10 +4,10 @@ import { ACTION_LABEL, STATUS_LABEL } from '../lib/format'
 import type { Action, CaseStatus, Verdict } from '../lib/types'
 
 export const VERDICT = {
-  satisfied: { label: 'Satisfied', icon: CircleCheck, cls: 'bg-ok-soft text-ok', dot: 'bg-ok' },
-  partial: { label: 'Partial', icon: CircleDot, cls: 'bg-warn-soft text-warn', dot: 'bg-warn' },
-  missing: { label: 'Missing', icon: CircleX, cls: 'bg-bad-soft text-bad', dot: 'bg-bad' },
-  not_applicable: { label: 'Not applicable', icon: CircleMinus, cls: 'bg-line-2 text-muted', dot: 'bg-muted' },
+  satisfied: { label: 'Satisfied', hint: 'The merchant’s evidence proves this', icon: CircleCheck, cls: 'bg-ok-soft text-ok', dot: 'bg-ok' },
+  partial: { label: 'Partial', hint: 'Proves part of it, or leaves a doubt', icon: CircleDot, cls: 'bg-warn-soft text-warn', dot: 'bg-warn' },
+  missing: { label: 'Missing', hint: 'Nothing the merchant sent proves it', icon: CircleX, cls: 'bg-bad-soft text-bad', dot: 'bg-bad' },
+  not_applicable: { label: 'Not applicable', hint: 'Doesn’t apply to this kind of purchase', icon: CircleMinus, cls: 'bg-line-2 text-muted', dot: 'bg-muted' },
 } as const
 
 export function VerdictBadge({ verdict, className }: { verdict: Verdict; className?: string }) {

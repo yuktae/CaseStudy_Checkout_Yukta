@@ -94,7 +94,14 @@ export function Viewer(props: ViewerProps) {
             <span className="truncate font-mono text-text-2">{doc.filename}</span>
             <div className="flex shrink-0 items-center gap-1">
               {!doc.pending && !doc.error && (
-                <Tooltip text={doc.reason || undefined} side="bottom">
+                <Tooltip
+                  text={
+                    doc.relevance === 'not_relevant'
+                      ? `${doc.reason ? `${doc.reason} ` : ''}Kept for reference, but it doesn’t count as evidence. Switch it back if you disagree.`
+                      : 'This file counts as evidence for the case. Switch to Not relevant if it shouldn’t.'
+                  }
+                  side="bottom"
+                >
                   <select
                     value={doc.relevance === 'not_relevant' ? 'not_relevant' : 'used'}
                     disabled={readOnly}

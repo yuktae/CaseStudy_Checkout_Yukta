@@ -83,6 +83,17 @@ So it's a mix: PyMuPDF for PDF text and positions, a vision model to read images
 - Confidence is shown with its reasons, for example "key evidence read from an image".
 - "Not relevant" is kept separate from "missing", so a merchant's own fraud score shows as uploaded but irrelevant, with the reason.
 - Heads-up chips cover what's easy to miss: conflicts, deep pages, rules that decide the outcome, linked cases.
+- Every partial or missing requirement says what's still needed and whether the merchant could fix it.
+
+**How confidence is calculated** (`decide.py`, `score_confidence`). Confidence is about the recommended action. It starts at High and each failed check lowers it one level (none failed: High, one: Medium, two or more: Low):
+
+1. Key evidence comes from document text, not only from an image.
+2. Every quoted passage was found in the documents.
+3. No conflict in the evidence. A conflict doesn't count when accepting, because a merchant claim that the data contradicts can only support accepting.
+4. The rule check and the AI recommendation agree.
+5. When accepting a case that could be represented, no requirement is partly met (otherwise it may be closer than it looks).
+
+Data inconsistencies, such as a time-zone difference, are shown as notes but don't change the level. The case page lists every check with a tick or a cross.
 
 ## Results on the 10 cases
 

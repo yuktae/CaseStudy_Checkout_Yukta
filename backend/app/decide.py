@@ -43,6 +43,60 @@ def _code_action(logic: str, reqs: list[dict]) -> str:
     return "accept_liability"
 
 
+def score_confidence(requirements: list[dict], logic: str, action: str, n_conflicts: int, n_inconsistencies: int,
+                     needs_judgement: bool) -> dict:
+    """Confidence in the recommended action.
+
+    It starts at 3 points (High) and each check below that fails costs one point: 3 is High, 2 is Medium, 0 or 1
+    is Low. Notes are shown to the analyst but never cost a point. Every check is returned, passed or not, so the
+    UI can show exactly how the label was reached.
+    """
+    applicable = [r for r in requirements if r["verdict"] != "not_applicable"]
+    partials = [r for r in applicable if r["verdict"] == "partial"]
+    unverified = sum(1 for r in requirements for c in r["citations"] if not c["verified"])
+    image_only = any(r["vision_only"] and r["verdict"] in ("satisfied", "partial") for r in requirements)
+    accepting = action == "accept_liability"
+
+    def plural(n: int, word: str) -> str:
+        return f"{n} {word}{'s' if n > 1 else ''}"
+
+    checks = []  # (check, passed, reason shown when it fails)
+    if accepting and logic != "AUTO_ACCEPT":
+        checks.append(("No requirement is partly met, so accepting isn't borderline", not partials,
+                       f"{plural(len(partials), 'requirement')} partly met: the case may be closer than it looks"))
+    checks += [
+        ("Key evidence comes from document text, not only from an image", not image_only,
+         "Key evidence read from an image"),
+        ("Every quoted passage was found in the documents", not unverified,
+         f"{plural(unverified, 'quote')} could not be verified"),
+        # A merchant claim that the data contradicts can only support accepting, so it only counts otherwise.
+        ("No conflict in the evidence", not n_conflicts or accepting,
+         "Evidence conflicts with the claim or the transaction data"),
+        ("The rule check and the AI recommendation agree", not needs_judgement,
+         "Rule check and AI recommendation disagree"),
+    ]
+    reasons = [reason for _, ok, reason in checks if not ok]
+    notes = []
+    if n_conflicts and accepting:
+        notes.append("Conflicting evidence flagged; it does not make accepting riskier")
+    if n_inconsistencies:
+        notes.append(f"{n_inconsistencies} data inconsistenc{'ies' if n_inconsistencies > 1 else 'y'} to check")
+    score = max(0, 3 - len(reasons))
+    return {"level": LEVELS.get(score, "Low"), "score": score,
+            "reasons": reasons or ["Every requirement the decision relies on is backed by verified evidence"],
+            "notes": notes,
+            "checks": [{"label": label, "passed": ok} for label, ok, _ in checks]}
+
+
+def explain_confidence(workup: dict) -> dict:
+    """Recompute confidence (with its checks) from a stored workup, so older analyses show the breakdown too."""
+    kinds = [a["type"] for a in workup["alerts"]]
+    d = workup["decision"]
+    d["confidence"] = score_confidence(workup["requirements"], workup["rule"]["logic"], d["code_action"],
+                                       kinds.count("conflict"), kinds.count("inconsistency"), d["needs_judgement"])
+    return workup
+
+
 def build_workup(case: dict, rule: dict, docs: list[dict], assessment: Assessment,
                  located: dict[str, list[dict]]) -> dict:
     by_id: dict = {}
@@ -88,33 +142,11 @@ def build_workup(case: dict, rule: dict, docs: list[dict], assessment: Assessmen
     ai_action = assessment.recommended_action
     needs_judgement = code_action != ai_action
 
-    # ------------------------------------------------------------ confidence
-    # Confidence is about the recommended action. Reasons lower it; notes are shown but do not.
-    reasons, notes = [], []
-    partials = [r for r in applicable if r["verdict"] == "partial"]
-    if partials and code_action == "accept_liability" and rule["logic"] != "AUTO_ACCEPT":
-        reasons.append(f"{len(partials)} requirement{'s' if len(partials) > 1 else ''} partly met: "
-                       "the case may be closer than it looks")
-    if any(r["vision_only"] and r["verdict"] in ("satisfied", "partial") for r in requirements):
-        reasons.append("Key evidence read from an image")
-    unverified = [c for r in requirements for c in r["citations"] if not c["verified"]]
-    if unverified:
-        reasons.append(f"{len(unverified)} quote{'s' if len(unverified) > 1 else ''} could not be verified")
     conflicts = [f for f in assessment.flags if f.kind == "conflict"]
-    if conflicts and code_action == "accept_liability":
-        # A merchant claim that the data contradicts can only support accepting, so it is shown but costs nothing.
-        notes.append("Conflicting evidence flagged; it does not make accepting riskier")
-    elif conflicts:
-        reasons.append("Evidence conflicts with the claim or the transaction data")
-    if needs_judgement:
-        reasons.append("Rule check and AI recommendation disagree")
     inconsistencies = [f for f in assessment.flags if f.kind == "inconsistency"]
-    if inconsistencies:
-        notes.append(f"{len(inconsistencies)} data inconsistenc{'ies' if len(inconsistencies) > 1 else 'y'} to check")
-    score = max(0, 3 - len(reasons))
-    confidence = {"level": LEVELS.get(score, "Low"), "score": score,
-                  "reasons": reasons or ["Every requirement the decision relies on is backed by verified evidence"],
-                  "notes": notes}
+    unverified = [c for r in requirements for c in r["citations"] if not c["verified"]]
+    confidence = score_confidence(requirements, rule["logic"], code_action, len(conflicts), len(inconsistencies),
+                                  needs_judgement)
 
     # ------------------------------------------------------------- documents
     doc_views = []

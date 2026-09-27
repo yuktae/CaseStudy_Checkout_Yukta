@@ -13,7 +13,6 @@ import {
   Pencil,
   RotateCcw,
   ShieldAlert,
-  Wrench,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Card, SectionTitle, Tooltip } from '../../components/ui'
@@ -146,20 +145,8 @@ function RequirementCard({ req, docs, previous, verdictOf, override, onOverride,
         </div>
       )}
 
-      {(req.gap && verdict !== 'satisfied' && verdict !== 'not_applicable') || req.date_check || req.downgraded || ov?.note ? (
+      {req.date_check || req.downgraded || ov?.note ? (
         <div className="mt-3 space-y-1.5 border-t border-line-2 pt-3 text-[12.5px]">
-          {req.gap && verdict !== 'satisfied' && verdict !== 'not_applicable' && (
-            <p className="flex items-start gap-2 text-text-2">
-              <Wrench className="mt-0.5 size-3.5 shrink-0 text-muted" />
-              <span>
-                <span className="font-medium text-text">Gap: </span>
-                {req.gap}
-                <span className={clsx('ml-2 rounded px-1.5 py-px text-[10.5px] font-semibold', req.fixable ? 'bg-warn-soft text-warn' : 'bg-line-2 text-muted')}>
-                  {req.fixable ? 'Fixable' : 'Not fixable'}
-                </span>
-              </span>
-            </p>
-          )}
           {req.date_check && (
             <p className="flex items-center gap-2 text-text-2">
               {req.date_check.ok === false ? <CalendarX className="size-3.5 text-bad" /> : <CalendarCheck className="size-3.5 text-ok" />}
@@ -283,7 +270,7 @@ function VerdictMenu({ verdict, aiVerdict, edited, note, readOnly, onChange }: {
         <motion.div
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute right-0 z-30 mt-2 w-64 rounded-xl border border-line bg-surface p-2 shadow-[var(--shadow-pop)]"
+          className="absolute right-0 z-30 mt-2 w-72 rounded-xl border border-line bg-surface p-2 shadow-[var(--shadow-pop)]"
         >
           {(Object.keys(VERDICT) as Verdict[]).map((v) => {
             const meta = VERDICT[v]
@@ -296,8 +283,11 @@ function VerdictMenu({ verdict, aiVerdict, edited, note, readOnly, onChange }: {
                 }}
                 className={clsx('flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[13px] hover:bg-line-2', v === verdict && 'bg-line-2')}
               >
-                <meta.icon className={clsx('size-4', meta.cls.split(' ')[1])} />
-                <span className="flex-1">{meta.label}</span>
+                <meta.icon className={clsx('size-4 shrink-0', meta.cls.split(' ')[1])} />
+                <span className="flex-1">
+                  <span className="block">{meta.label}</span>
+                  <span className="block text-[11.5px] text-muted">{meta.hint}</span>
+                </span>
                 {v === aiVerdict && <span className="text-[10.5px] font-medium text-muted">AI</span>}
               </button>
             )

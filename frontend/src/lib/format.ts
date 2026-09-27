@@ -28,6 +28,20 @@ export const ACTION_LABEL: Record<Action, string> = {
   request_more_evidence: 'Request more evidence',
 }
 
+// What each decision means for the dispute.
+export const ACTION_HELP: Record<Action, string> = {
+  represent: 'Fight the chargeback: the rationale is filed with the issuer as the merchant’s defence.',
+  accept_liability: 'Don’t fight it: the chargeback stands and the merchant takes the loss.',
+  request_more_evidence: 'Pause the case: ask the merchant for the documents listed below, then re-analyse when they arrive.',
+}
+
+// What the final button does in Exhibit.
+export const COMPLETE_HELP: Record<Action, string> = {
+  represent: 'Saves the decision, marks the case Completed and opens the next case to review.',
+  accept_liability: 'Saves the decision, marks the case Completed and opens the next case to review.',
+  request_more_evidence: 'Saves the decision, moves the case to Awaiting merchant and opens the next case. Use Copy as email to send the requests.',
+}
+
 export const COMPLETE_LABEL: Record<Action, string> = {
   represent: 'File representment',
   accept_liability: 'Accept liability',

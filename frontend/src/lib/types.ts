@@ -144,6 +144,7 @@ export interface Workup {
     logic: 'ALL' | 'ANY_TWO' | 'ANY_ONE' | 'EITHER' | 'AUTO_ACCEPT'
     logic_label: string
     note: string | null
+    definition?: string | null
   }
   summary: { allegation: string; to_defend: string }
   requirements: Requirement[]
@@ -155,7 +156,13 @@ export interface Workup {
     code_action: Action
     ai_action: Action
     needs_judgement: boolean
-    confidence: { level: 'High' | 'Medium' | 'Low'; score: number; reasons: string[]; notes: string[] }
+    confidence: {
+      level: 'High' | 'Medium' | 'Low'
+      score: number
+      reasons: string[]
+      notes: string[]
+      checks?: { label: string; passed: boolean }[]
+    }
   }
   justification: string
   rationale: string

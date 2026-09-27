@@ -109,6 +109,8 @@ def test_disagreement_flags_needs_judgement(client):
     d = w["decision"]
     assert d["code_action"] == "request_more_evidence" and d["ai_action"] == "accept_liability"
     assert d["needs_judgement"] and d["confidence"]["level"] == "Low"
+    failed = [c["label"] for c in d["confidence"]["checks"] if not c["passed"]]
+    assert len(failed) == 3 - d["confidence"]["score"] or d["confidence"]["score"] == 0
     assert w["requirements"][0]["vision_only"]
 
 
@@ -138,6 +140,7 @@ def test_conflict_does_not_lower_confidence_in_accept(client):
     c = w["decision"]["confidence"]
     assert w["decision"]["action"] == "accept_liability" and c["level"] == "High"
     assert c["notes"] and any(a["type"] == "conflict" for a in w["alerts"])
+    assert all(check["passed"] for check in c["checks"])
 
 
 @pytest.mark.parametrize("avs,cvv,expected", [

@@ -1,11 +1,11 @@
 import clsx from 'clsx'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronDown, Copy, History, Mail, MessageSquareQuote, Plus, RotateCcw, Scale, Sparkles, X } from 'lucide-react'
+import { Check, ChevronDown, Copy, History, Info, Mail, MessageSquareQuote, Plus, RotateCcw, Scale, Sparkles, Wrench, X } from 'lucide-react'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { ACTION, ConfidenceMeter, SchemeBadge, VERDICT } from '../../components/status'
-import { Button, Card, SectionTitle } from '../../components/ui'
+import { Button, Card, SectionTitle, Tooltip } from '../../components/ui'
 import { useToast } from '../../components/toast'
-import { ACTION_LABEL, dateTime } from '../../lib/format'
+import { ACTION_HELP, ACTION_LABEL, dateTime } from '../../lib/format'
 import type { Action, Case, Verdict, Workup } from '../../lib/types'
 
 // ------------------------------------------------------------ 1. Reason
@@ -15,33 +15,88 @@ export interface DefendItem {
   title: string
   text: string
   verdict: Verdict
+  gap: string
+  fixable: boolean
+}
+
+type Logic = Workup['rule']['logic']
+
+const LOGIC_HELP: Record<Exclude<Logic, 'AUTO_ACCEPT'>, string> = {
+  ALL: 'The merchant’s evidence must prove every item below.',
+  ANY_TWO: 'The merchant’s evidence must prove at least two of the items below.',
+  ANY_ONE: 'The merchant’s evidence must prove at least one of the items below.',
+  EITHER: 'The merchant’s evidence must prove at least one of the items below.',
+}
+
+function needed(logic: Logic, items: DefendItem[]) {
+  if (logic === 'ALL') return items.filter((i) => i.verdict !== 'not_applicable').length
+  return logic === 'ANY_TWO' ? 2 : 1
+}
+
+/** Whether a gap could be closed by asking the merchant, with the reason on hover. */
+export function FixTag({ fixable }: { fixable: boolean }) {
+  return (
+    <Tooltip
+      text={
+        fixable
+          ? 'The merchant could supply this, so it goes on the request list.'
+          : 'The facts can’t change (for example a failed check), so more documents won’t help.'
+      }
+    >
+      <span className={clsx('ml-1.5 rounded px-1.5 py-px text-[10.5px] font-semibold whitespace-nowrap', fixable ? 'bg-warn-soft text-warn' : 'bg-line-2 text-muted')}>
+        {fixable ? 'Merchant can fix' : 'Can’t be fixed'}
+      </span>
+    </Tooltip>
+  )
 }
 
 export function ReasonSection({ workup, kase, items, onPick }: { workup: Workup; kase: Case; items: DefendItem[]; onPick: (id: string) => void }) {
-  const [showNarrative, setShowNarrative] = useState(false)
+  const { rule } = workup
+  const auto = rule.logic === 'AUTO_ACCEPT'
+  const need = needed(rule.logic, items)
+  const proven = items.filter((i) => i.verdict === 'satisfied').length
+  const met = proven >= need
   return (
     <section>
       <SectionTitle index={1}>Reason code</SectionTitle>
       <Card className="p-5">
         <div className="flex items-center gap-2.5">
           <SchemeBadge scheme={kase.scheme} code={kase.reason_code} />
-          <span className="text-[14px] font-semibold">{workup.rule.title}</span>
-          <span className="ml-auto rounded-md bg-line-2 px-2 py-0.5 text-[11px] font-medium text-text-2">{workup.rule.category}</span>
+          <span className="text-[14px] font-semibold">{rule.title}</span>
+          <span className="ml-auto rounded-md bg-line-2 px-2 py-0.5 text-[11px] font-medium text-text-2">{rule.category}</span>
         </div>
         <dl className="mt-4 grid gap-3.5 text-[13.5px] leading-relaxed">
+          {rule.definition && (
+            <div>
+              <dt className="mb-0.5 text-[11px] font-semibold tracking-wide text-muted uppercase">What this code means</dt>
+              <dd className="text-text-2">{rule.definition}</dd>
+            </div>
+          )}
           <div>
-            <dt className="mb-0.5 text-[11px] font-semibold tracking-wide text-muted uppercase">Allegation</dt>
+            <dt className="mb-0.5 flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-muted uppercase">
+              The issuer’s claim in this case
+              <Tooltip text={<>Issuer’s original words: “{kase.issuer_narrative}”</>}>
+                <MessageSquareQuote className="size-3.5 text-blue" aria-label="Issuer’s original words" />
+              </Tooltip>
+            </dt>
             <dd className="text-text">{workup.summary.allegation}</dd>
           </div>
           <div>
-            <dt className="mb-0.5 flex items-center gap-2 text-[11px] font-semibold tracking-wide text-muted uppercase">
+            <dt className="mb-1 flex flex-wrap items-center gap-2 text-[11px] font-semibold tracking-wide text-muted uppercase">
               To defend
-              <span className="rounded bg-blue-soft px-1.5 py-px text-[10px] tracking-normal text-blue normal-case">{workup.rule.logic_label}</span>
+              <span className="rounded bg-blue-soft px-1.5 py-px text-[10px] tracking-normal text-blue normal-case">{rule.logic_label}</span>
+              <span className={clsx('ml-auto rounded px-1.5 py-px text-[10.5px] tracking-normal normal-case', met ? 'bg-ok-soft text-ok' : 'bg-warn-soft text-warn')}>
+                {proven} of {need} needed proven
+              </span>
             </dt>
             <dd>
-              <ul className="mt-1.5 divide-y divide-line-2 overflow-hidden rounded-xl border border-line">
+              <p className={clsx('mb-2 text-[12.5px] leading-snug', auto ? 'rounded-lg bg-judge-soft px-3 py-2 text-judge' : 'text-text-2')}>
+                {auto ? rule.note : LOGIC_HELP[rule.logic as Exclude<Logic, 'AUTO_ACCEPT'>]}
+              </p>
+              <ul className="divide-y divide-line-2 overflow-hidden rounded-xl border border-line">
                 {items.map((it) => {
                   const v = VERDICT[it.verdict]
+                  const open = (it.verdict === 'partial' || it.verdict === 'missing') && it.gap
                   return (
                     <li key={it.id}>
                       <button onClick={() => onPick(it.id)} className="flex w-full items-start gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-[#fafbfd]">
@@ -52,8 +107,23 @@ export function ReasonSection({ workup, kase, items, onPick }: { workup: Workup;
                             <span className={clsx('text-[13.5px] font-medium', it.verdict === 'not_applicable' ? 'text-muted line-through decoration-muted/40' : 'text-text')}>{it.title}</span>
                           </span>
                           <span className="mt-0.5 block text-[12.5px] leading-snug text-muted">{it.text}</span>
+                          {open && met && rule.logic !== 'ALL' && (
+                            <span className="mt-1 block text-[12px] text-muted">Not needed: enough items are already proven.</span>
+                          )}
+                          {open && !(met && rule.logic !== 'ALL') && (
+                            <span className={clsx('mt-1.5 flex items-start gap-1.5 rounded-md px-2 py-1 text-[12.5px] leading-snug text-text-2', it.verdict === 'missing' ? 'bg-bad-soft/50' : 'bg-warn-soft/50')}>
+                              <Wrench className="mt-0.5 size-3.5 shrink-0 text-muted" />
+                              <span>
+                                <span className="font-semibold text-text">{it.verdict === 'missing' ? 'Missing: ' : 'Still needed: '}</span>
+                                {it.gap}
+                                <FixTag fixable={it.fixable} />
+                              </span>
+                            </span>
+                          )}
                         </span>
-                        <span className={clsx('mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold', v.cls)}>{v.label}</span>
+                        <Tooltip text={v.hint}>
+                          <span className={clsx('mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold', v.cls)}>{v.label}</span>
+                        </Tooltip>
                       </button>
                     </li>
                   )
@@ -61,29 +131,7 @@ export function ReasonSection({ workup, kase, items, onPick }: { workup: Workup;
               </ul>
             </dd>
           </div>
-          {workup.rule.note && <dd className="rounded-lg bg-judge-soft px-3 py-2 text-[13px] text-judge">{workup.rule.note}</dd>}
         </dl>
-        <button
-          onClick={() => setShowNarrative((s) => !s)}
-          className="mt-4 flex items-center gap-1.5 text-[12.5px] font-medium text-blue hover:text-blue-dark"
-        >
-          <MessageSquareQuote className="size-4" />
-          Issuer narrative
-          <ChevronDown className={clsx('size-3.5 transition-transform', showNarrative && 'rotate-180')} />
-        </button>
-        <AnimatePresence initial={false}>
-          {showNarrative && (
-            <motion.blockquote
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
-            >
-              <p className="mt-2 border-l-2 border-blue-line pl-3 text-[13px] leading-relaxed text-text-2 italic">{kase.issuer_narrative}</p>
-            </motion.blockquote>
-          )}
-        </AnimatePresence>
       </Card>
     </section>
   )
@@ -96,8 +144,21 @@ export function AutoTextarea({ value, onChange, disabled, className }: { value: 
   useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
-    el.style.height = 'auto'
-    el.style.height = `${el.scrollHeight}px`
+    const fit = () => {
+      el.style.height = 'auto'
+      el.style.height = `${el.scrollHeight}px`
+    }
+    fit()
+    document.fonts?.ready.then(fit)
+    let width = el.clientWidth
+    const observer = new ResizeObserver(() => {
+      if (el.clientWidth !== width) {
+        width = el.clientWidth
+        fit()
+      }
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
   }, [value])
   return (
     <textarea
@@ -263,6 +324,8 @@ export function ActionSection({ workup, action, onAction, reason, onReason, just
           })}
         </div>
 
+        <p className="mt-2.5 text-[12.5px] leading-snug text-white/80">{ACTION_HELP[action]}</p>
+
         {d.needs_judgement && (
           <div className="mt-3 grid grid-cols-2 gap-2 text-[12.5px]">
             <div className="rounded-lg bg-white/10 px-3 py-2">
@@ -308,22 +371,48 @@ export function ActionSection({ workup, action, onAction, reason, onReason, just
           )}
         </AnimatePresence>
 
-        <ul className="mt-4 space-y-1 border-t border-white/15 pt-3 text-[12.5px] text-white/80">
-          {d.confidence.reasons.map((r) => (
-            <li key={r} className="flex gap-2">
-              <span className="mt-[7px] size-1 shrink-0 rounded-full bg-white/60" />
-              {r}
-            </li>
+        <ConfidenceBreakdown confidence={d.confidence} />
+      </div>
+    </section>
+  )
+}
+
+/** How the confidence label was reached: every check, passed or failed, and the notes that don't count. */
+function ConfidenceBreakdown({ confidence }: { confidence: Workup['decision']['confidence'] }) {
+  const checks = confidence.checks
+  return (
+    <div className="mt-4 border-t border-white/15 pt-3 text-[12.5px]">
+      <p className="text-[11px] font-semibold tracking-wide text-white/60 uppercase">How confidence is worked out</p>
+      {checks ? (
+        <>
+          <p className="mt-1 leading-snug text-white/70">Starts at High. Each failed check lowers it one level: none failed is High, one is Medium, two or more is Low.</p>
+          <ul className="mt-2 space-y-1">
+            {checks.map((c) => (
+              <li key={c.label} className="flex items-start gap-2">
+                {c.passed ? <Check className="mt-0.5 size-3.5 shrink-0 text-[#86efac]" strokeWidth={2.6} /> : <X className="mt-0.5 size-3.5 shrink-0 text-[#fca5a5]" strokeWidth={2.6} />}
+                <span className={c.passed ? 'text-white/80' : 'font-semibold text-white'}>{c.label}</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        <ul className="mt-2 space-y-1 text-white/80">
+          {confidence.reasons.map((r) => (
+            <li key={r}>{r}</li>
           ))}
-          {d.confidence.notes?.map((r) => (
-            <li key={r} className="flex gap-2 text-white/60">
-              <span className="mt-[7px] size-1 shrink-0 rounded-full bg-white/40" />
-              {r}
+        </ul>
+      )}
+      {confidence.notes.length > 0 && (
+        <ul className="mt-2 space-y-1 text-white/60">
+          {confidence.notes.map((n) => (
+            <li key={n} className="flex items-start gap-2">
+              <Info className="mt-0.5 size-3.5 shrink-0" />
+              <span>{n} (for information, doesn’t change confidence)</span>
             </li>
           ))}
         </ul>
-      </div>
-    </section>
+      )}
+    </div>
   )
 }
 

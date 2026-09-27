@@ -50,10 +50,10 @@ Case **CB-2025-0002**: the only proof of delivery is a screenshot.
 
 Case **CB-2025-0006** (armchair "not as described"):
 
-1. **Reason code**: the allegation in plain English and a "To defend" checklist of what the rule needs, each ticked, half-ticked or crossed.
+1. **Reason code**: what the code means, the issuer's claim in this case (the issuer's original words on hover), and a "To defend" checklist. The checklist says how many items the merchant must prove, counts how many are proven, and for each partial or missing item says what's still needed and whether the merchant can fix it.
 2. **Evidence assessment**: R1 satisfied (the listing); R2 partial (a front-view photo can't show a wobbling frame); R3 missing (the returns policy describes a route, but nothing shows what happened to the cardholder's request).
 3. **Representment rationale**: numbered points, each editable, ready to file after a light edit.
-4. **Recommended action**: Request more evidence, with the justification and the confidence reasons.
+4. **Recommended action**: Request more evidence, with what that means, the justification, and how confidence was worked out (each check with a tick or a cross).
 5. **Merchant requests**: specific asks, with *Copy as email*.
 
 ---
