@@ -48,7 +48,7 @@ cd backend
 ../.venv/bin/python -m pytest tests -q     # tests, no API key needed
 ```
 
-To use a different dataset, replace `data/` (same `cases.json` + `documents/` layout), delete `storage/` and run `app.cli run --all`. Nothing in the code is specific to these 10 cases.
+`data/` is the challenge dataset exactly as provided (its own README is in there). To use a different dataset, replace `data/` (same `cases.json` + `documents/` layout), delete `storage/` and run `app.cli run --all`. Nothing in the code is specific to these 10 cases.
 
 ## How it works
 
@@ -81,7 +81,7 @@ The brief says this matters more than getting every call right, so the tool is e
 
 - unverified quotes are struck through and don't count;
 - "Needs judgement" when the rules and the model disagree, and the draft rationale says if it argues for the other action;
-- confidence is shown with its reasons, for example "key evidence read from an image";
+- confidence is shown with its reasons, for example "key evidence read from an image" (a conflict lowers it when representing or asking for evidence, but not when accepting, because a merchant claim the data contradicts can only support accepting);
 - alerts for things that are easy to miss: evidence on page 8 of 10, a rule that forces the outcome, a missing file, linked cases;
 - "not relevant" is kept separate from "missing", so a merchant's own fraud score shows up as uploaded but irrelevant, with the reason.
 
@@ -91,28 +91,28 @@ I designed the screens around cognitive load. The scheme rules are complicated a
 
 **Dashboard.** A "New case" area at the top (drop files or a case JSON, or open the form), and the case list underneath. The list has status tabs (To review, In review, Awaiting merchant, Completed), search, filters (scheme, category, recommendation, confidence, flags) and a sort that defaults to easiest first, so the clean cases can be cleared quickly. Filters are kept in the URL, so going back from a case restores the view. New analyses show their progress in a small panel in the bottom right.
 
-**Case page.** The workup is on the left, in the order the brief lists it: reason code summary, evidence assessment (one card per requirement), rationale, recommended action, and the merchant requests when more evidence is needed. The documents are on the right. Clicking a quote opens the right document, scrolls to the page and pulses the highlight. Hovering a requirement lights up its highlights, and clicking a highlight takes you back to the requirement. `[` and `]` step through the evidence.
+**Case page.** A compact header gives the verdict and the confidence, and a single profile card shows the case and the transaction checks (AVS, CVV, 3DS, addresses, device). Anything the analyst mustn't miss sits in a row of small heads-up chips just below. The workup is on the left, in the order the brief lists it, with a step bar to jump between sections: reason code summary with a "To defend" checklist, evidence assessment (one card per requirement), the rationale as numbered points, recommended action, and the merchant requests when more evidence is needed. The documents are on the right, and switching between them doesn't reload them. Clicking a quote opens the right document, scrolls to the page and pulses the highlight. Hovering a requirement lights up its highlights, and clicking a highlight takes you back to the requirement. `[` and `]` step through the evidence.
 
-**What the analyst can change.** Any verdict (with a note), whether a document counts as evidence, the recommended action (a reason is required), the justification, the rationale and the merchant requests. The AI's version is kept next to the analyst's. Save keeps the review. Complete shows a summary of what's being filed, sets the status and moves on to the next open case. Adding evidence brings up a "Re-analyse case" button; the new analysis becomes a new version, changed verdicts are tagged "Updated", and edited text is kept with a note if the AI now suggests something different.
+**What the analyst can change.** Any verdict (with a note), whether a document counts as evidence, the recommended action (a reason is required), the justification, the rationale and the merchant requests. The AI's version is kept next to the analyst's. Save keeps the review. Complete shows a summary of what's being filed, sets the status and moves on to the next open case. "Add evidence" opens a dialog for any number of files, shows placeholders for the documents the requirements still need, and warns that the case will be re-analysed; the new analysis becomes a new version, changed verdicts are tagged "Updated", and edited text is kept with a note if the AI now suggests something different.
 
 ## Results on the provided cases
 
-Before building the tool, I wrote down the expected action for each case from a read-through against the rules (`eval/expected.json`). The tool agrees on all 10, and all 49 quotes it cited were found in the documents.
+Before building the tool, I wrote down the expected action for each case from a read-through against the rules (`eval/expected.json`). The tool agrees on all 10, and all 51 quotes it cited were found in the documents. The dataset README gives a one-line hint per case, so here is how each one comes out:
 
-| Case | Code | Recommendation | Confidence | Notes |
-|---|---|---|---|---|
-| 0001 | Visa 13.1 | Represent | High | Signed delivery to the matching address; linked to 0005 and 0010 (same device and IP) |
-| 0002 | Visa 13.1 | Request more evidence | Low | Delivered to an address the cardholder disputes; the proof is a screenshot |
-| 0003 | MC 4837 | Represent | High | AVS + CVV match and 3DS, which is two of the four |
-| 0004 | MC 4837 | Accept liability | Medium | The only document is the merchant's own risk score, marked not relevant |
-| 0005 | Visa 12.6.1 | Represent | High | Two separate orders; the BST/UTC timestamp difference is noted |
-| 0006 | Visa 13.3 | Request more evidence | Low | A front-view photo can't show a wobbling frame; nothing shows what happened to the refund request |
-| 0007 | MC 4855 | Represent | High | The proof is on page 8 of 10, matched on the transaction reference rather than the look-alike rows |
-| 0008 | Visa 13.2 | Request more evidence | Medium | Only generic terms; a policy isn't proof a notice was sent |
-| 0009 | MC 4859 | Represent | High | Booking, consent, no-show log and fee all check out; the charge date is flagged |
-| 0010 | Visa 10.5 | Accept liability | Low, needs judgement | The model argued for representing because the evidence looks strong; the auto-accept rule held |
+| Case | Code | Hint | Recommendation | Confidence | What the analyst sees |
+|---|---|---|---|---|---|
+| 0001 | Visa 13.1 | Straightforward, sanity check | Represent | High | Signed delivery to the matching address; linked to 0005 and 0010 (same device and IP) |
+| 0002 | Visa 13.1 | Check the addresses carefully | Request more evidence | Low | Delivered to an address the cardholder disputes, billing and shipping postcodes differ and AVS failed; the proof is a screenshot |
+| 0003 | MC 4837 | How many of the four are needed? | Represent | High | Any two are needed: AVS + CVV match and 3DS |
+| 0004 | MC 4837 | The evidence sounds confident | Accept liability | High | The merchant's risk score is marked not relevant, and its "legitimate" conclusion is flagged against failed AVS, CVV and no 3DS |
+| 0005 | Visa 12.6.1 | Two charges, same amount, same day | Represent | High | Two separate orders; a BST/UTC label difference is noted |
+| 0006 | Visa 13.3 | What can the photo tell you? | Request more evidence | Low | A front-view photo can't show a wobbling frame; nothing shows what happened to the refund request |
+| 0007 | MC 4855 | The evidence is in there somewhere | Represent | High | The proof is on page 8 of 10, matched on the transaction reference rather than the look-alike rows |
+| 0008 | Visa 13.2 | Policy vs proof | Request more evidence | Medium | Only generic terms; a policy isn't proof a notice was sent |
+| 0009 | MC 4859 | Read the policy and the log together | Represent | Medium | All four requirements met, but the booking says the rate was charged at booking while this charge is dated the stay day: confirm there's no double charge before filing |
+| 0010 | Visa 10.5 | Read the reason code rules carefully | Accept liability | High | 10.5 can only be fought by proving miscoding; the genuine-looking 3DS and delivery evidence is shown but doesn't count |
 
-A few honest caveats. After the first full run I adjusted the prompt once, to stick to the simplified rule wording, keep flags for things that matter, and always produce merchant requests when asking for evidence. With only 10 cases there's no held-out set, so treat the 10/10 as a sanity check rather than a benchmark. Between runs, the variation showed up in the flags rather than the actions: case 0010 went from agreement to "Needs judgement" with the same final outcome.
+A few honest caveats. After the first full run I adjusted the prompt to stick to the simplified rule wording, keep flags for things that matter, and always produce merchant requests when asking for evidence. After reading the dataset README I adjusted it again: the `A` AVS code, local time for hotel and French documents, checking the charge timing against the merchant's own documents, and making clear that proof of a genuine transaction isn't proof of miscoding under 10.5. On the run before that change, the model was persuaded by 0010's evidence and argued for representing; the auto-accept rule in code held the outcome and flagged the case "Needs judgement", which is what that safety net is for. With only 10 cases there's no held-out set, so treat the 10/10 as a sanity check rather than a benchmark. Between runs, the variation shows up in the flags and confidence rather than the actions.
 
 ## Project layout
 

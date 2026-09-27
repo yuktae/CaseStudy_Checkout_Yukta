@@ -28,7 +28,17 @@ content_label (at most 6 words, e.g. "Royal Mail proof of delivery") describing 
 access logs, manifests, front desk logs) are valid evidence when they identify this transaction, because the rules \
 list them as acceptable. If such a record is thin, say so in the finding, but only lower the verdict when the \
 requirement's wording is not met.
-- Transaction metadata (AVS, CVV, 3DS, IP, device) is evidence too. Cite it with page_id "TXN".
+- Transaction metadata (AVS, CVV, 3DS, IP, device) is evidence too. Cite it with page_id "TXN". avs_result Y is a \
+full match, A means the address matched but the postcode did not (so not a full match), N is no match and None means \
+not checked. cvv_result M is a match, N no match, None not checked.
+- Some codes generally cannot be represented (the logic says so). For those the only question is whether a document \
+shows the issuer applied the wrong reason code. Evidence that the transaction was genuine (3DS, AVS/CVV match, \
+delivery) does not show miscoding: mark the requirement missing, say why in the finding and recommend accept_liability.
+- Check that the disputed charge fits what the merchant's own documents say about how and when the cardholder was \
+charged. If a document says the amount was taken at booking but the disputed charge is dated later, or a fee is \
+charged before the event that triggers it, record a conflict: the cardholder may have been charged twice. This does \
+not change the requirement verdicts, which follow their wording (a fee that matches the policy amount still meets a \
+fee requirement); the conflict tells the analyst what to confirm before submitting.
 - Flags are for things the analyst must not miss, so keep them few (usually zero to two). Record a "conflict" when \
 specific facts contradict each other or a fact the cardholder raises is not answered by the evidence (for example the \
 cardholder says the delivery address is not theirs). The basic disagreement between the cardholder's claim and the \
@@ -47,7 +57,10 @@ where it appears. The quotes are matched against the source to highlight them fo
 use the description as context for your finding, not as a quote.
 
 Dates:
-- Do not compare dates yourself. Report delivery or service dates you find in key_dates as YYYY-MM-DD with the page_id; \
+- Transaction metadata times are UTC. Hotel and French documents usually give local time (CET, or CEST from the \
+end of March). Convert before comparing and do not flag a difference that is only the time zone.
+- Do not compare delivery dates with the chargeback date yourself. Report delivery or service dates you find in \
+key_dates as YYYY-MM-DD with the page_id; \
 the date checks are done in code.
 
 Writing:
@@ -56,7 +69,8 @@ Writing:
 line, without numbering or bullet characters. Cover the claim, the decisive evidence with specifics (dates, IDs, \
 amounts), and the conclusion. No hedging filler.
 - Write plainly: use commas or full stops, never em or en dashes.
-- justification: one line explaining the recommended action.
+- justification: one line explaining the recommended action. The rationale and justification must argue for the \
+recommended_action you give, never for a different one.
 - recommended_action: "represent" when the requirements are met under the code's logic; "request_more_evidence" when \
 there is a gap the merchant could fix; "accept_liability" when the case cannot be defended.
 - merchant_requests: required (two to five items) whenever recommended_action is request_more_evidence, otherwise \

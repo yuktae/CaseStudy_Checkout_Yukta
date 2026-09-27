@@ -38,7 +38,7 @@ interface Form {
 const EMPTY: Form = {
   case_id: '', scheme: 'visa', reason_code: '', chargeback_date: '', cb_value: '', cb_currency: 'GBP', narrative: '',
   transaction_id: '', merchant_name: '', mcc: '', txn_datetime: '', txn_value: '', txn_currency: 'GBP', bin_country: '',
-  avs: 'U', cvv: 'U', three_ds: 'not_attempted', ip: '', device: '', billing: '', shipping: '', shippingMode: 'separate',
+  avs: '', cvv: '', three_ds: 'not_attempted', ip: '', device: '', billing: '', shipping: '', shippingMode: 'separate',
 }
 
 const STEPS = ['Case', 'Transaction', 'Evidence'] as const
@@ -98,8 +98,8 @@ function fromJson(raw: unknown): Form | null {
     txn_value: String(t.amount?.value ?? ''),
     txn_currency: t.amount?.currency ?? 'GBP',
     bin_country: t.card_bin_country ?? '',
-    avs: t.avs_result ?? 'U',
-    cvv: t.cvv_result ?? 'U',
+    avs: t.avs_result ?? '',
+    cvv: t.cvv_result ?? '',
     three_ds: t.three_ds_status ?? 'not_attempted',
     ip: t.ip_address ?? '',
     device: t.device_fingerprint ?? '',
@@ -187,8 +187,8 @@ export function NewCaseDrawer({ open, onClose, initialFiles }: { open: boolean; 
         transaction_date: `${form.txn_datetime.slice(0, 16)}:00Z`, // the field is entered in UTC
         amount: { value: Number(form.txn_value), currency: form.txn_currency },
         card_bin_country: form.bin_country.toUpperCase() || null,
-        avs_result: form.avs,
-        cvv_result: form.cvv,
+        avs_result: form.avs || null,
+        cvv_result: form.cvv || null,
         three_ds_status: form.three_ds,
         ip_address: form.ip || null,
         device_fingerprint: form.device || null,
@@ -320,15 +320,15 @@ export function NewCaseDrawer({ open, onClose, initialFiles }: { open: boolean; 
                             <select value={form.avs} onChange={(e) => set('avs', e.target.value)} className={inputCls()}>
                               <option value="Y">Match</option>
                               <option value="N">No match</option>
-                              <option value="P">Partial</option>
-                              <option value="U">Unavailable</option>
+                              <option value="A">Partial (postcode mismatch)</option>
+                              <option value="">Not checked</option>
                             </select>
                           </Field>
                           <Field label="CVV">
                             <select value={form.cvv} onChange={(e) => set('cvv', e.target.value)} className={inputCls()}>
                               <option value="M">Match</option>
                               <option value="N">No match</option>
-                              <option value="U">Unavailable</option>
+                              <option value="">Not checked</option>
                             </select>
                           </Field>
                           <Field label="3DS">

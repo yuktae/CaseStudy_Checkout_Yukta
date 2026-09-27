@@ -2,6 +2,7 @@
 
 import json
 import logging
+import mimetypes
 import re
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -306,6 +307,9 @@ def document_file(case_id: str, doc_key: str):
 
 
 # --------------------------------------------------------- frontend (SPA)
+
+# Windows can map .mjs to text/plain in the registry, which stops the browser loading the PDF worker.
+mimetypes.add_type("text/javascript", ".mjs")
 
 if STATIC_DIR.exists():
     app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")

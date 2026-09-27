@@ -55,18 +55,19 @@ def signals(case: dict, all_cases: list[dict] | None = None) -> list[dict]:
     t = case["transaction"]
     out = []
 
-    avs = (t.get("avs_result") or "U").upper()
+    # Dataset coding: Y full match, A address matches but postcode does not, N no match, null not checked.
+    avs = (t.get("avs_result") or "").upper()
     out.append({"key": "avs", "label": "AVS", **{
         "Y": {"value": "Match", "status": "pass"},
         "N": {"value": "No match", "status": "fail"},
-        "P": {"value": "Partial", "status": "warn"},
-    }.get(avs, {"value": "Unavailable", "status": "neutral"})})
+        "A": {"value": "Partial, postcode mismatch", "status": "warn"},
+    }.get(avs, {"value": "Not checked", "status": "neutral"})})
 
-    cvv = (t.get("cvv_result") or "U").upper()
+    cvv = (t.get("cvv_result") or "").upper()
     out.append({"key": "cvv", "label": "CVV", **{
         "M": {"value": "Match", "status": "pass"},
         "N": {"value": "No match", "status": "fail"},
-    }.get(cvv, {"value": "Unavailable", "status": "neutral"})})
+    }.get(cvv, {"value": "Not checked", "status": "neutral"})})
 
     tds = (t.get("three_ds_status") or "not_attempted").lower()
     out.append({"key": "three_ds", "label": "3DS", **{

@@ -11,68 +11,20 @@
   "note": "This reason code generally cannot be represented. Recommend accepting liability unless the merchant can prove the transaction was miscoded by the issuer."
  },
  "summary": {
-  "allegation": "The issuer has charged back a £78.50 transaction of 30 April 2025 at Brightline Beauty under the Visa Fraud Monitoring Program, asserting the transaction was identified as fraudulent through Visa's fraud monitoring of the merchant.",
-  "to_defend": "Visa 10.5 can only be defended by showing the transaction was miscoded by the issuer under the Fraud Monitoring Program — i.e. it was not a fraudulent transaction and should not have been reported as such."
+  "allegation": "The issuer has raised the transaction under the Visa Fraud Monitoring Program, meaning this card account was flagged as fraudulent through Visa's fraud monitoring reporting rather than through a standard dispute.",
+  "to_defend": "The only defence is documentary proof that the issuer miscoded the dispute under the Visa Fraud Monitoring Program."
  },
  "requirements": [
   {
    "id": "R1",
    "title": "Proof the issuer miscoded the chargeback",
    "text": "Evidence that the transaction was miscoded by the issuer under the Visa Fraud Monitoring Program.",
-   "verdict": "partial",
-   "ai_verdict": "partial",
-   "finding": "The merchant's records show a fully authenticated, address-matched and delivered transaction: Visa Secure authentication with ECI 05 for txn_1178ST, AVS 'Y' and CVV 'M', and Evri delivery on 2 May 2025 to 22 Cavendish Court, SW4 7QR — the same postcode as the billing address — signed for by 'WHITFORD', on a returning account with three prior undisputed orders. That is strong evidence the transaction was not fraudulent, but there is no issuer or Visa record directly confirming the transaction was miscoded under the Fraud Monitoring Program.",
-   "gap": "No documentation from the issuer or Visa confirming the fraud coding was applied in error; the miscoding argument is inferential from the authentication and delivery evidence.",
+   "verdict": "missing",
+   "ai_verdict": "missing",
+   "finding": "Nothing in the file addresses the coding of the dispute; the merchant supplied a Visa Secure authentication record and a delivery confirmation, both of which speak to transaction validity rather than to whether the issuer applied the wrong reason code.",
+   "gap": "No issuer correspondence, Visa case record or fraud reporting extract showing the dispute was raised under the wrong reason code.",
    "fixable": false,
-   "citations": [
-    {
-     "page_id": "D1-p1",
-     "quote": "Cardholder was successfully authenticated via Visa Secure on this transaction.",
-     "doc_key": "D1",
-     "page_no": 1,
-     "verified": true,
-     "match": "exact",
-     "rects": [
-      [
-       0.12851,
-       0.28715,
-       0.71896,
-       0.30704
-      ]
-     ],
-     "source": "text",
-     "relocated": false
-    },
-    {
-     "page_id": "TXN",
-     "quote": "avs_result: Y\ncvv_result: M\nthree_ds_status: authenticated",
-     "doc_key": null,
-     "page_no": null,
-     "verified": true,
-     "match": "exact",
-     "rects": [],
-     "source": "txn",
-     "relocated": false
-    },
-    {
-     "page_id": "D2-p1",
-     "quote": "Carrier: Evri, tracking H7821VV. Delivered 2 May 2025, 14:08, signed by 'WHITFORD'.",
-     "doc_key": "D2",
-     "page_no": 1,
-     "verified": true,
-     "match": "exact",
-     "rects": [
-      [
-       0.12851,
-       0.17075,
-       0.77947,
-       0.19063
-      ]
-     ],
-     "source": "text",
-     "relocated": false
-    }
-   ],
+   "citations": [],
    "downgraded": null,
    "date_check": null,
    "vision_only": false
@@ -89,9 +41,9 @@
    "kind": "pdf",
    "error": null,
    "is_new": false,
-   "label": "Visa Secure 3DS authentication record",
-   "relevance": "used",
-   "reason": "",
+   "label": "Visa Secure authentication record",
+   "relevance": "not_relevant",
+   "reason": "Shows the cardholder was authenticated via 3DS, which evidences a genuine transaction but does not show the issuer miscoded the dispute under the Fraud Monitoring Program.",
    "pages": [
     {
      "page_no": 1,
@@ -108,9 +60,9 @@
    "kind": "pdf",
    "error": null,
    "is_new": false,
-   "label": "Evri delivery confirmation with signature",
-   "relevance": "used",
-   "reason": "",
+   "label": "Evri delivery confirmation, order BB-77231",
+   "relevance": "not_relevant",
+   "reason": "Confirms delivery to the billing postcode, which goes to transaction validity, not to whether the reason code was applied in error.",
    "pages": [
     {
      "page_no": 1,
@@ -127,11 +79,6 @@
    "type": "auto_rule",
    "severity": "info",
    "text": "Visa 10.5 generally cannot be represented. The evidence is shown but does not change the outcome unless it proves miscoding."
-  },
-  {
-   "type": "judgement",
-   "severity": "warn",
-   "text": "The rule check and the AI recommendation disagree. Review both before deciding."
   }
  ],
  "key_dates": [
@@ -144,20 +91,19 @@
  "decision": {
   "action": "accept_liability",
   "code_action": "accept_liability",
-  "ai_action": "represent",
-  "needs_judgement": true,
+  "ai_action": "accept_liability",
+  "needs_judgement": false,
   "confidence": {
-   "level": "Low",
-   "score": 1,
+   "level": "High",
+   "score": 3,
    "reasons": [
-    "1 requirement partly met: the case may be closer than it looks",
-    "Rule check and AI recommendation disagree"
+    "Every requirement the decision relies on is backed by verified evidence"
    ],
    "notes": []
   }
  },
- "justification": "Full Visa Secure authentication (ECI 05) with AVS/CVV match and signed delivery to the billing postcode supports the argument that the transaction was wrongly coded as fraud.",
- "rationale": "The issuer has charged back £78.50 (txn_1178ST, 30 April 2025) under the Visa Fraud Monitoring Program. The transaction was successfully authenticated through Visa Secure with ECI 05 and a valid CAVV at 22:14:51 UTC on 30 April 2025, and carried AVS result 'Y' and CVV result 'M'. Order BB-77231 for £78.50 was delivered by Evri (tracking H7821VV) on 2 May 2025 at 14:08 to 22 Cavendish Court, London SW4 7QR — matching the billing postcode on file — and was signed for by 'WHITFORD', on a returning customer account with three prior undisputed orders since January 2025. These facts are inconsistent with a fraudulent transaction and indicate the item was miscoded as fraud under the Fraud Monitoring Program. We represent on that basis, while noting that no issuer-side confirmation of the coding error is available to us.",
+ "justification": "Reason code 10.5 cannot be represented on the merits and no evidence suggests the issuer miscoded the dispute.",
+ "rationale": "The issuer has processed this £78.50 transaction of 30 April 2025 (txn_1178ST) under Visa reason code 10.5, Visa Fraud Monitoring Program.\nThe only defence available under this code is proof that the issuer applied the wrong reason code, and no issuer correspondence or Visa case record addressing coding has been supplied.\nThe Visa Secure record (ECI 05, authenticated at 2025-04-30 22:14:51 UTC) and the Evri delivery to 22 Cavendish Court, SW4 7QR on 2 May 2025 show the transaction was genuine, but evidence of a genuine transaction does not establish miscoding.\nStrong authentication and matching AVS and CVV results are worth raising separately with the acquirer if the account has been flagged in error, but they do not support a representment here.\nWe recommend accepting liability for the full £78.50.",
  "merchant_requests": [],
  "model": "claude-opus-5"
 }

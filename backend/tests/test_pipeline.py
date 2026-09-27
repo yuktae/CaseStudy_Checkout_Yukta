@@ -11,7 +11,7 @@ os.environ["ANTHROPIC_API_KEY"] = "test-key"
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
-from app import assess, db, decide, main, pipeline, vision  # noqa: E402
+from app import assess, db, decide, main, pipeline, rules, vision  # noqa: E402
 from app.models import (Assessment, Citation, DocumentAssessment, Flag, KeyDate,  # noqa: E402
                         RequirementAssessment, VisionReading)
 
@@ -57,6 +57,12 @@ def fake_assessment(case, rule, docs):
             req("R4", "satisfied", [("D2-p1", "Shipping address: 22 Cavendish Court, London SW4 7QR")]),
         ], documents=[], flags=[], key_dates=[KeyDate(label="delivery", date="2025-05-24", page_id="D1-p1")],  # after CB
             recommended_action="represent")
+    if cid == "CB-2025-0004":
+        return Assessment(**common, requirements=[
+            req("R1", "missing", fixable=False), req("R2", "missing", fixable=False),
+            req("R3", "missing", fixable=False), req("R4", "not_applicable"),
+        ], documents=[], flags=[Flag(kind="conflict", text="The report says legitimate; AVS and CVV failed.")],
+            key_dates=[], recommended_action="accept_liability")
     raise AssertionError(f"no fixture for {cid}")
 
 
@@ -125,3 +131,21 @@ def test_api_review_and_complete(client):
     r = client.post("/api/cases/CB-2025-0007/complete", json={"version": v, "final_action": "represent"})
     assert r.json()["summary"]["status"] == "completed"
     assert client.get("/api/cases/CB-2025-0007/documents/D1/file").status_code == 200
+
+
+def test_conflict_does_not_lower_confidence_in_accept(client):
+    w = pipeline.run("CB-2025-0004")
+    c = w["decision"]["confidence"]
+    assert w["decision"]["action"] == "accept_liability" and c["level"] == "High"
+    assert c["notes"] and any(a["type"] == "conflict" for a in w["alerts"])
+
+
+@pytest.mark.parametrize("avs,cvv,expected", [
+    ("Y", "M", ("Match", "Match")),
+    ("A", "N", ("Partial, postcode mismatch", "No match")),
+    (None, None, ("Not checked", "Not checked")),
+])
+def test_avs_cvv_codes(avs, cvv, expected):
+    case = {"case_id": "X", "transaction": {"avs_result": avs, "cvv_result": cvv}}
+    s = {x["key"]: x["value"] for x in rules.signals(case)}
+    assert (s["avs"], s["cvv"]) == expected

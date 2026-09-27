@@ -11,8 +11,8 @@
   "note": null
  },
  "summary": {
-  "allegation": "The cardholder says they paid TerraFreight Logistics £412.75 for a freight shipment to be collected and delivered, that the shipment was never collected, and that no service was ever provided.",
-  "to_defend": "The merchant must show proof the service was actually rendered, dated before the 14 May 2025 chargeback, to an address matching the cardholder's records."
+  "allegation": "The issuer says the cardholder paid TerraFreight Logistics 412.75 GBP for a freight shipment that was never collected or delivered, so no service was received.",
+  "to_defend": "The merchant must show proof the shipment was collected and delivered before the chargeback date, to an address matching the cardholder's records."
  },
  "requirements": [
   {
@@ -21,13 +21,13 @@
    "text": "Proof of delivery (tracking + carrier confirmation) or proof of service rendered (access logs, attendance, completed booking).",
    "verdict": "satisfied",
    "ai_verdict": "satisfied",
-   "finding": "The merchant's operational manifest ties consignment TF-9051 directly to this transaction reference (txn_7745MN), recording collection from LS1 4DT at 11:30 on 22 April 2025 and delivery to LS9 8AA at 17:14 the same day, signed for by warehouse staff with a POD image reference (POD-9051-img). The POD image itself is not attached, but the completed-movement record identifies this transaction and meets the wording.",
+   "finding": "The merchant's weekly manifest contains a consignment line, TF-9051, expressly cross referenced to this transaction (ref txn_7745MN), showing collection at 11:30 and delivery at 17:14 on 22 April 2025, signed for at destination with a POD image referenced on file.",
    "gap": "",
    "fixable": false,
    "citations": [
     {
      "page_id": "D1-p8",
-     "quote": "Consignment TF-9051 (Stentor Bros, ref txn_7745MN): Collected from LS1 4DT at 11:30 on 22 April 2025 and delivered to LS9 8AA at 17:14 the same day.",
+     "quote": "Consignment TF-9051 (Stentor Bros, ref txn_7745MN): Collected from LS1 4DT at 11:30 on 22\nApril 2025 and delivered to LS9 8AA at 17:14 the same day.",
      "doc_key": "D1",
      "page_no": 8,
      "verified": true,
@@ -78,29 +78,23 @@
    "text": "Date of delivery / service is before the chargeback date.",
    "verdict": "satisfied",
    "ai_verdict": "satisfied",
-   "finding": "The manifest records delivery of TF-9051 on 22 April 2025, the same day as the 22 April 2025 transaction and well ahead of the 14 May 2025 chargeback.",
+   "finding": "Service was completed on 22 April 2025, well before the 14 May 2025 chargeback date.",
    "gap": "",
    "fixable": false,
    "citations": [
     {
      "page_id": "D1-p8",
-     "quote": "delivered to LS9 8AA at 17:14 the same day. Signed for by warehouse staff at\ndestination. POD image on file.",
+     "quote": "DELIVERED 22 Apr 17:14",
      "doc_key": "D1",
      "page_no": 8,
      "verified": true,
      "match": "exact",
      "rects": [
       [
-       0.2415,
-       0.25389,
-       0.8255,
-       0.27378
-      ],
-      [
-       0.12851,
-       0.26815,
-       0.36511,
-       0.28803
+       0.56946,
+       0.13657,
+       0.71176,
+       0.15156
       ]
      ],
      "source": "text",
@@ -120,13 +114,13 @@
    "text": "Delivery address matches the cardholder's records.",
    "verdict": "satisfied",
    "ai_verdict": "satisfied",
-   "finding": "The collection postcode LS1 4DT matches the cardholder's billing postcode and the delivery postcode LS9 8AA matches the shipping postcode on the authorisation record; the transaction also passed AVS, CVV and 3DS authentication.",
+   "finding": "The manifest shows collection from LS1 4DT and delivery to LS9 8AA, which match the billing and shipping postcodes held for this transaction, and AVS returned a full match with CVV matched and 3DS authenticated.",
    "gap": "",
    "fixable": false,
    "citations": [
     {
      "page_id": "D1-p8",
-     "quote": "Collected from LS1 4DT at 11:30 on 22\nApril 2025 and delivered to LS9 8AA at 17:14",
+     "quote": "Collected from LS1 4DT at 11:30 on 22\nApril 2025 and delivered to LS9 8AA",
      "doc_key": "D1",
      "page_no": 8,
      "verified": true,
@@ -141,7 +135,7 @@
       [
        0.12851,
        0.25389,
-       0.46973,
+       0.40435,
        0.27378
       ]
      ],
@@ -150,7 +144,18 @@
     },
     {
      "page_id": "TXN",
-     "quote": "billing_address_postcode: LS1 4DT\nshipping_address_postcode: LS9 8AA",
+     "quote": "avs_result: Y",
+     "doc_key": null,
+     "page_no": null,
+     "verified": true,
+     "match": "exact",
+     "rects": [],
+     "source": "txn",
+     "relocated": false
+    },
+    {
+     "page_id": "TXN",
+     "quote": "shipping_address_postcode: LS9 8AA",
      "doc_key": null,
      "page_no": null,
      "verified": true,
@@ -176,7 +181,7 @@
    "kind": "pdf",
    "error": null,
    "is_new": false,
-   "label": "Weekly freight manifest with consignment record",
+   "label": "Weekly freight manifest with POD line",
    "relevance": "used",
    "reason": "",
    "pages": [
@@ -248,12 +253,12 @@
   {
    "type": "inconsistency",
    "severity": "info",
-   "text": "Pages 1-7 of the manifest are seven identical copies of the same eight routine consignments (TF-9001 to TF-9008), none of which relate to this transaction; only page 8 carries the relevant record for TF-9051 / txn_7745MN."
+   "text": "The manifest records collection at 11:30 local time on 22 April 2025 (10:30 UTC), which is before the card authorisation at 10:55 UTC the same day; confirm the booking and payment sequence so the timeline reads correctly."
   },
   {
    "type": "deep_page",
    "severity": "info",
-   "text": "Evidence for R1, R2, R3 is on page 8 of 10 in Weekly freight manifest with consignment record.",
+   "text": "Evidence for R1, R2, R3 is on page 8 of 10 in Weekly freight manifest with POD line.",
    "target": {
     "requirement": "R1"
    }
@@ -287,8 +292,8 @@
    ]
   }
  },
- "justification": "The merchant's manifest links this exact transaction ID to a completed collection and delivery on 22 April 2025 between the cardholder's own billing and shipping postcodes.",
- "rationale": "The cardholder claims the freight shipment charged at £412.75 on 22 April 2025 was never collected and no service was provided. TerraFreight's operational manifest records consignment TF-9051 against transaction reference txn_7745MN, collected from LS1 4DT at 11:30 on 22 April 2025 and delivered to LS9 8AA at 17:14 the same day, signed for by warehouse staff with POD image POD-9051-img on file. Those postcodes match the billing and shipping addresses on the authorisation record exactly, and the transaction was authenticated via 3DS with AVS 'Y' and CVV 'M'. Service was therefore rendered on 22 April 2025, three weeks before the 14 May 2025 chargeback. We represent in full and can supply the POD image on request.",
+ "justification": "The manifest ties consignment TF-9051 directly to txn_7745MN with collection, delivery, signature and matching postcodes before the chargeback date.",
+ "rationale": "The issuer claims the freight shipment was never collected and no service was provided.\nThe merchant's operational manifest records consignment TF-9051 against transaction reference txn_7745MN, collected from LS1 4DT at 11:30 on 22 April 2025 and delivered to LS9 8AA at 17:14 the same day, signed for by warehouse staff with POD image on file.\nThe collection and delivery postcodes match the billing and shipping postcodes held for the 412.75 GBP transaction of 22 April 2025.\nAuthentication data supports the cardholder's involvement, with AVS Y, CVV M and a successful 3DS authentication.\nService was rendered on 22 April 2025, three weeks before the 14 May 2025 chargeback, so the case should be represented, ideally with the POD-9051 image attached.",
  "merchant_requests": [],
  "model": "claude-opus-5"
 }

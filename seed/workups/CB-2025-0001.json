@@ -11,8 +11,8 @@
   "note": null
  },
  "summary": {
-  "allegation": "The cardholder says they ordered clothing on 22 March 2025 for £189.99 and never received the package, and that two contacts with the merchant produced no resolution.",
-  "to_defend": "Visa 13.1 requires proof the merchandise was delivered to the cardholder's address on or before the chargeback date, with carrier, tracking and address matching the purchase record."
+  "allegation": "The cardholder says they ordered clothing on 22 March 2025 and never received the package, and that two contacts with the merchant did not resolve it, so the issuer raised a 13.1 non receipt chargeback for GBP 189.99.",
+  "to_defend": "The merchant must show proof of delivery to the cardholder's address on or before the chargeback date, with carrier name, tracking number and confirmation of delivery."
  },
  "requirements": [
   {
@@ -21,23 +21,23 @@
    "text": "Proof of delivery: tracking number, carrier name, and confirmation of delivery to the cardholder's address.",
    "verdict": "satisfied",
    "ai_verdict": "satisfied",
-   "finding": "Royal Mail tracking RM98421144GB shows the parcel delivered and signed for by WHITFORD at SW4 7QR on 24 March 2025, with signature on file; the merchant order record ties the same tracking number to order #NT-44912.",
+   "finding": "Royal Mail tracking RM98421144GB shows the item posted 23 March 2025 and delivered and signed for at SW4 7QR on 24 March 2025, with the recipient named as M. Whitford at 22 Cavendish Court.",
    "gap": "",
    "fixable": false,
    "citations": [
     {
      "page_id": "D1-p1",
-     "quote": "DELIVERED — signed by WHITFORD",
+     "quote": "Tracking number: RM98421144GB",
      "doc_key": "D1",
      "page_no": 1,
      "verified": true,
      "match": "exact",
      "rects": [
       [
-       0.12661,
-       0.36682,
-       0.39124,
-       0.38508
+       0.12851,
+       0.12799,
+       0.39404,
+       0.14787
       ]
      ],
      "source": "text",
@@ -45,7 +45,7 @@
     },
     {
      "page_id": "D1-p1",
-     "quote": "Proof of Delivery: Signature on file. This item was delivered to the address shown and signed for\nat 11:47 on 24 March 2025.",
+     "quote": "Proof of Delivery: Signature on file. This item was delivered to the address shown and signed for at 11:47 on 24 March 2025.",
      "doc_key": "D1",
      "page_no": 1,
      "verified": true,
@@ -69,7 +69,7 @@
     },
     {
      "page_id": "D2-p1",
-     "quote": "Dispatched 23 March 2025 via Royal Mail Tracked 24\nTracking: RM98421144GB",
+     "quote": "Dispatched 23 March 2025 via Royal Mail Tracked 24",
      "doc_key": "D2",
      "page_no": 1,
      "verified": true,
@@ -80,12 +80,6 @@
        0.35842,
        0.53221,
        0.3783
-      ],
-      [
-       0.12851,
-       0.3798,
-       0.33242,
-       0.39968
       ]
      ],
      "source": "text",
@@ -102,7 +96,7 @@
    "text": "For services: evidence the service was rendered on or before the expected date (booking confirmation, attendance log, access logs).",
    "verdict": "not_applicable",
    "ai_verdict": "not_applicable",
-   "finding": "This is a physical goods purchase (MCC 5651, Heritage Wool Overcoat) shipped by Royal Mail, so the services limb does not apply.",
+   "finding": "The transaction is for physical merchandise, a Heritage Wool Overcoat shipped by Royal Mail, so the services evidence requirement does not apply.",
    "gap": "",
    "fixable": false,
    "citations": [],
@@ -116,10 +110,28 @@
    "text": "Date of delivery / service rendered is on or before the chargeback date.",
    "verdict": "satisfied",
    "ai_verdict": "satisfied",
-   "finding": "Delivery occurred on 24 March 2025, well before the 18 April 2025 chargeback date.",
+   "finding": "Delivery is recorded on 24 March 2025 at 11:47, two days after the 22 March 2025 purchase and well before the 18 April 2025 chargeback.",
    "gap": "",
    "fixable": false,
    "citations": [
+    {
+     "page_id": "D1-p1",
+     "quote": "DELIVERED — signed by WHITFORD",
+     "doc_key": "D1",
+     "page_no": 1,
+     "verified": true,
+     "match": "exact",
+     "rects": [
+      [
+       0.12661,
+       0.36682,
+       0.39124,
+       0.38508
+      ]
+     ],
+     "source": "text",
+     "relocated": false
+    },
     {
      "page_id": "D2-p1",
      "quote": "Delivered 24 March 2025, 11:47 — signed for at SW4 7QR",
@@ -152,40 +164,10 @@
    "text": "The delivery address materially matches the address provided by the cardholder at purchase.",
    "verdict": "satisfied",
    "ai_verdict": "satisfied",
-   "finding": "The delivery address on the Royal Mail record (22 Cavendish Court, London SW4 7QR) is identical to the billing and shipping address on order #NT-44912 and to the SW4 7QR postcode in the transaction metadata, with AVS result Y.",
+   "finding": "The delivery address 22 Cavendish Court, London SW4 7QR matches the billing and shipping postcode on the transaction record, and AVS returned Y with CVV M and a 3DS authenticated result.",
    "gap": "",
    "fixable": false,
    "citations": [
-    {
-     "page_id": "D1-p1",
-     "quote": "M. Whitford\n22 Cavendish Court\nLondon SW4 7QR",
-     "doc_key": "D1",
-     "page_no": 1,
-     "verified": true,
-     "match": "exact",
-     "rects": [
-      [
-       0.12851,
-       0.21351,
-       0.21943,
-       0.23339
-      ],
-      [
-       0.12851,
-       0.22776,
-       0.282,
-       0.24765
-      ],
-      [
-       0.12851,
-       0.24202,
-       0.26988,
-       0.2619
-      ]
-     ],
-     "source": "text",
-     "relocated": false
-    },
     {
      "page_id": "D2-p1",
      "quote": "Billing address: 22 Cavendish Court, London SW4 7QR\nShipping address: 22 Cavendish Court, London SW4 7QR",
@@ -212,7 +194,18 @@
     },
     {
      "page_id": "TXN",
-     "quote": "billing_address_postcode: SW4 7QR\nshipping_address_postcode: SW4 7QR",
+     "quote": "avs_result: Y",
+     "doc_key": null,
+     "page_no": null,
+     "verified": true,
+     "match": "exact",
+     "rects": [],
+     "source": "txn",
+     "relocated": false
+    },
+    {
+     "page_id": "TXN",
+     "quote": "shipping_address_postcode: SW4 7QR",
      "doc_key": null,
      "page_no": null,
      "verified": true,
@@ -280,7 +273,7 @@
   },
   {
    "label": "other",
-   "date": "2025-03-23",
+   "date": "2025-03-22",
    "page_id": "D2-p1"
   }
  ],
@@ -298,8 +291,8 @@
    "notes": []
   }
  },
- "justification": "Signed carrier proof of delivery to the cardholder's own billing/shipping address predates the chargeback, satisfying every applicable 13.1 requirement.",
- "rationale": "The cardholder disputes a £189.99 purchase made on 22 March 2025 (txn_8821AB) on the basis that the goods never arrived. Merchant order #NT-44912 records one Heritage Wool Overcoat at £189.99 shipped to 22 Cavendish Court, London SW4 7QR — the same address as billing and matching the SW4 7QR postcode and AVS result Y on the authorisation. Royal Mail tracking RM98421144GB shows the parcel posted 23 March 2025 and delivered at 11:47 on 24 March 2025, signed for by WHITFORD at SW4 7QR with signature on file, well before the 18 April 2025 chargeback date. The transaction was also 3DS authenticated with CVV match, supporting cardholder participation in the order. Delivery to the cardholder's stated address is evidenced; we represent in full.",
+ "justification": "Carrier proof of delivery with signature to the cardholder's own address, supported by full AVS, CVV and 3DS matches, meets every applicable 13.1 requirement.",
+ "rationale": "The issuer alleges the goods ordered on 22 March 2025 for GBP 189.99 were never received.\nRoyal Mail tracking RM98421144GB for order NT-44912 shows the parcel posted 23 March 2025 and delivered and signed for by WHITFORD at 11:47 on 24 March 2025.\nThe delivery address, 22 Cavendish Court, London SW4 7QR, matches the billing and shipping postcode captured at authorisation.\nThe transaction carried AVS Y, CVV M and a successful 3DS authentication from a UK IP, consistent with the genuine cardholder placing the order.\nDelivery on 24 March 2025 preceded the 18 April 2025 chargeback, so the non receipt claim is rebutted and the case should be represented in full.",
  "merchant_requests": [],
  "model": "claude-opus-5"
 }

@@ -92,7 +92,7 @@ def build_workup(case: dict, rule: dict, docs: list[dict], assessment: Assessmen
     # Confidence is about the recommended action. Reasons lower it; notes are shown but do not.
     reasons, notes = [], []
     partials = [r for r in applicable if r["verdict"] == "partial"]
-    if partials and code_action == "accept_liability":
+    if partials and code_action == "accept_liability" and rule["logic"] != "AUTO_ACCEPT":
         reasons.append(f"{len(partials)} requirement{'s' if len(partials) > 1 else ''} partly met: "
                        "the case may be closer than it looks")
     if any(r["vision_only"] and r["verdict"] in ("satisfied", "partial") for r in requirements):
@@ -101,7 +101,10 @@ def build_workup(case: dict, rule: dict, docs: list[dict], assessment: Assessmen
     if unverified:
         reasons.append(f"{len(unverified)} quote{'s' if len(unverified) > 1 else ''} could not be verified")
     conflicts = [f for f in assessment.flags if f.kind == "conflict"]
-    if conflicts:
+    if conflicts and code_action == "accept_liability":
+        # A merchant claim that the data contradicts can only support accepting, so it is shown but costs nothing.
+        notes.append("Conflicting evidence flagged; it does not make accepting riskier")
+    elif conflicts:
         reasons.append("Evidence conflicts with the claim or the transaction data")
     if needs_judgement:
         reasons.append("Rule check and AI recommendation disagree")

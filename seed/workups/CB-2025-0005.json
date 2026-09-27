@@ -11,8 +11,8 @@
   "note": null
  },
  "summary": {
-  "allegation": "The cardholder says Roastline Coffee Co charged their card twice for £54.00 on 12 April 2025 and that only one purchase was actually made, so one of the two charges is a duplicate.",
-  "to_defend": "The merchant must show the two £54.00 charges were two distinct purchases, each with its own purchase documentation, timestamp and authorisation code."
+  "allegation": "The issuer says the cardholder was billed twice for the same purchase by Roastline Coffee Co on 12 April 2025, with two identical charges of GBP 54.00 when only one purchase was made.",
+  "to_defend": "Visa requires evidence that the two charges relate to two genuinely separate purchases, with separate purchase documentation and distinct timestamps and authorisation codes."
  },
  "requirements": [
   {
@@ -21,18 +21,48 @@
    "text": "Evidence the two transactions are for two separate purchases (e.g. different order IDs, different items, different services rendered).",
    "verdict": "satisfied",
    "ai_verdict": "satisfied",
-   "finding": "The two charges carry different order IDs (RL-ORDER-44188 and RL-ORDER-44192), different invoice numbers (RL-88291 and RL-88294) and entirely different baskets — coffee beans in one, an Aeropress Go kit and filter papers in the other — placed roughly eleven hours apart on the same day. The identical £54.00 totals arise from a £6.00 loyalty discount applied to the first order's £60.00 basket.",
+   "finding": "The merchant supplied two invoices with different invoice numbers, different order IDs and entirely different baskets: coffee beans on RL-ORDER-44188 and an Aeropress Go kit with filter papers on RL-ORDER-44192. The amounts match at GBP 54.00 only because a GBP 6.00 loyalty discount was applied to the first order.",
    "gap": "",
    "fixable": false,
    "citations": [
     {
      "page_id": "D1-p1",
-     "quote": "Order ID: RL-ORDER-44188",
+     "quote": "Invoice #RL-88291\nOrder ID: RL-ORDER-44188",
      "doc_key": "D1",
      "page_no": 1,
      "verified": true,
      "match": "exact",
      "rects": [
+      [
+       0.12851,
+       0.12799,
+       0.27455,
+       0.14787
+      ],
+      [
+       0.12851,
+       0.14937,
+       0.34732,
+       0.16925
+      ]
+     ],
+     "source": "text",
+     "relocated": false
+    },
+    {
+     "page_id": "D2-p1",
+     "quote": "Invoice #RL-88294\nOrder ID: RL-ORDER-44192",
+     "doc_key": "D2",
+     "page_no": 1,
+     "verified": true,
+     "match": "exact",
+     "rects": [
+      [
+       0.12851,
+       0.12799,
+       0.27455,
+       0.14787
+      ],
       [
        0.12851,
        0.14937,
@@ -45,35 +75,23 @@
     },
     {
      "page_id": "D1-p1",
-     "quote": "Single Origin Ethiopia Yirgacheffe 250g",
+     "quote": "Loyalty discount\n-£6.00\nCharged\n£54.00",
      "doc_key": "D1",
      "page_no": 1,
      "verified": true,
      "match": "exact",
      "rects": [
       [
-       0.12661,
-       0.26705,
-       0.39552,
-       0.2853
-      ]
-     ],
-     "source": "text",
-     "relocated": false
-    },
-    {
-     "page_id": "D2-p1",
-     "quote": "Order ID: RL-ORDER-44192",
-     "doc_key": "D2",
-     "page_no": 1,
-     "verified": true,
-     "match": "exact",
-     "rects": [
+       0.6028,
+       0.35257,
+       0.79356,
+       0.37082
+      ],
       [
-       0.12851,
-       0.14937,
-       0.34732,
-       0.16925
+       0.6028,
+       0.37395,
+       0.79693,
+       0.3922
       ]
      ],
      "source": "text",
@@ -81,7 +99,7 @@
     },
     {
      "page_id": "D2-p1",
-     "quote": "Aeropress Go starter kit",
+     "quote": "Aeropress Go starter kit\n1\n£42.00\nFilter papers (350 pack)\n1\n£12.00",
      "doc_key": "D2",
      "page_no": 1,
      "verified": true,
@@ -90,8 +108,14 @@
       [
        0.12661,
        0.26705,
-       0.29129,
+       0.79693,
        0.2853
+      ],
+      [
+       0.12661,
+       0.28843,
+       0.79693,
+       0.30668
       ]
      ],
      "source": "text",
@@ -108,7 +132,7 @@
    "text": "Documentation of each purchase event (separate invoices, separate delivery confirmations, separate service dates).",
    "verdict": "satisfied",
    "ai_verdict": "satisfied",
-   "finding": "Two separate invoices document each purchase event, each showing its own order date, itemised basket and delivery: order RL-ORDER-44188 delivered 14 April 2025 under DPD consignment 7711224488, and order RL-ORDER-44192 delivered 15 April 2025 under DPD consignment 7711224501. The delivery evidence is merchant-stated on the invoices rather than carrier-issued proof of delivery, but it identifies distinct consignments and distinct dates for each charge.",
+   "finding": "Each purchase event has its own invoice and its own DPD consignment with a separate delivery date, 14 April 2025 on tracking 7711224488 and 15 April 2025 on tracking 7711224501.",
    "gap": "",
    "fixable": false,
    "citations": [
@@ -159,7 +183,7 @@
    "text": "Transaction timestamps and authorisation codes for each charge.",
    "verdict": "satisfied",
    "ai_verdict": "satisfied",
-   "finding": "Each charge carries its own capture timestamp and authorisation code: auth 442189 captured 12 Apr 2025 08:11:33 for order RL-ORDER-44188, and auth 552781 captured 12 Apr 2025 19:42:18 for order RL-ORDER-44192. The disputed transaction txn_5523IJ timestamps to 08:11:33 on 12 April, matching the first capture.",
+   "finding": "Both charges carry distinct capture timestamps and distinct authorisation codes, 442189 captured at 08:11:33 on 12 April and 552781 captured at 19:42:18 the same evening; the disputed transaction record shows the morning charge at 2025-04-12T08:11:33Z for GBP 54.00.",
    "gap": "",
    "fixable": false,
    "citations": [
@@ -227,7 +251,7 @@
    "kind": "pdf",
    "error": null,
    "is_new": false,
-   "label": "Invoice for coffee bean order",
+   "label": "Invoice for coffee order RL-ORDER-44188",
    "relevance": "used",
    "reason": "",
    "pages": [
@@ -246,7 +270,7 @@
    "kind": "pdf",
    "error": null,
    "is_new": false,
-   "label": "Invoice for Aeropress equipment order",
+   "label": "Invoice for equipment order RL-ORDER-44192",
    "relevance": "used",
    "reason": "",
    "pages": [
@@ -264,7 +288,7 @@
   {
    "type": "inconsistency",
    "severity": "info",
-   "text": "The invoice records the first capture as 08:11:33 BST while transaction metadata records txn_5523IJ as 08:11:33Z (UTC); BST is UTC+1, so the two stamps are nominally an hour apart despite referring to the same capture."
+   "text": "The first invoice labels the capture as 12 Apr 2025 08:11:33 BST while the transaction record shows 2025-04-12T08:11:33Z, so the two sources state the same clock time in different zones and differ by one hour; confirm which reading is correct before filing."
   }
  ],
  "key_dates": [
@@ -276,11 +300,6 @@
   {
    "label": "delivery",
    "date": "2025-04-15",
-   "page_id": "D2-p1"
-  },
-  {
-   "label": "other",
-   "date": "2025-04-12",
    "page_id": "D2-p1"
   }
  ],
@@ -300,8 +319,8 @@
    ]
   }
  },
- "justification": "Both £54.00 charges are documented as distinct orders with different items, order IDs, authorisation codes and separate DPD deliveries, so no duplicate processing occurred.",
- "rationale": "The issuer alleges a duplicate £54.00 charge on 12 April 2025. The merchant has evidenced two separate purchases on that date: invoice RL-88291 (order RL-ORDER-44188, coffee beans, £60.00 less a £6.00 loyalty discount) captured at 08:11:33 under auth code 442189 and delivered 14 April 2025 on DPD consignment 7711224488; and invoice RL-88294 (order RL-ORDER-44192, Aeropress Go kit and filter papers) captured at 19:42:18 under auth code 552781 and delivered 15 April 2025 on DPD consignment 7711224501. The matching £54.00 totals are coincidental — different baskets, different order IDs, different authorisation codes, separate deliveries eleven hours and one day apart respectively. The disputed transaction txn_5523IJ (AVS Y, CVV M, 3DS frictionless, billing and shipping both N1 4PD) reconciles to the first capture, and neither charge duplicates the other.",
+ "justification": "All three requirements are satisfied by two separate invoices with different order IDs, items, deliveries, timestamps and authorisation codes.",
+ "rationale": "The issuer alleges a duplicate charge of GBP 54.00 on 12 April 2025 for a single purchase.\nThe merchant evidences two distinct orders placed the same day, RL-ORDER-44188 at 08:11 for coffee beans and RL-ORDER-44192 at 19:42 for an Aeropress Go kit and filter papers.\nThe amounts are equal only because a GBP 6.00 loyalty discount reduced the GBP 60.00 first order to GBP 54.00.\nEach charge has its own authorisation code, 442189 and 552781, and its own DPD consignment delivered on 14 and 15 April 2025 respectively.\nThe charges are not duplicates and the chargeback should be represented in full.",
  "merchant_requests": [],
  "model": "claude-opus-5"
 }
