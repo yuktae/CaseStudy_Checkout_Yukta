@@ -57,6 +57,7 @@ export interface CaseSummary {
   merchant: string
   amount: Money
   chargeback_date: string
+  respond_by: string | null
   created_at: string
   updated_at: string
   doc_count: number
@@ -127,6 +128,7 @@ export interface Alert {
     | 'no_documents'
   severity: 'info' | 'warn' | 'critical'
   text: string
+  disputed_charge?: boolean
   target?: { requirement?: string; doc?: string }
 }
 
@@ -168,6 +170,7 @@ export interface Workup {
   rationale: string
   rationale_for?: Action
   merchant_requests: string[]
+  analyst_notes?: string[]
 }
 
 export interface TextEdit {
@@ -212,6 +215,7 @@ export interface Job {
 export interface CaseDetail {
   case: Case
   summary: CaseSummary
+  respond_by: string | null
   signals: Signal[]
   linked: { case_id: string; merchant: string; shared: string[] }[]
   workup: Workup | null

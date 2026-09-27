@@ -66,7 +66,8 @@ def _summary(case: dict, all_cases: list[dict]) -> dict:
                                                                                        case.get("reason_code_label")),
         "category": rules.category(case["scheme"], case["reason_code"]),
         "merchant": t["merchant_name"], "amount": case["chargeback_amount"],
-        "chargeback_date": case["chargeback_date"], "created_at": case["created_at"],
+        "chargeback_date": case["chargeback_date"], "respond_by": rules.respond_by(case),
+        "created_at": case["created_at"],
         "updated_at": case["updated_at"],
         "doc_count": len(db.list_documents(case["case_id"])),
         "linked": len(rules.linked_cases(case, all_cases)),
@@ -105,6 +106,7 @@ def _detail(case_id: str, version: int | None = None) -> dict:
     return {
         "case": case,
         "summary": _summary(case, all_cases),
+        "respond_by": rules.respond_by(case),
         "signals": rules.signals(case, all_cases),
         "linked": rules.linked_cases(case, all_cases),
         "workup": workup,

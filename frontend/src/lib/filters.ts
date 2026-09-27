@@ -10,9 +10,10 @@ export const TABS: { key: Tab; label: string; match: (s: CaseStatus) => boolean 
   { key: 'completed', label: 'Completed', match: (s) => s === 'completed' },
 ]
 
-export type SortKey = 'newest' | 'chargeback' | 'amount' | 'easiest'
+export type SortKey = 'deadline' | 'newest' | 'chargeback' | 'amount' | 'easiest'
 
 export const SORTS: { key: SortKey; label: string }[] = [
+  { key: 'deadline', label: 'Deadline' },
   { key: 'easiest', label: 'Easiest first' },
   { key: 'newest', label: 'Newest' },
   { key: 'chargeback', label: 'Oldest chargeback' },
@@ -26,10 +27,11 @@ export interface Filters {
   category: string[]
   recommendation: string[]
   confidence: string[]
+  due: string[] // respond-by months, YYYY-MM
   flagged: boolean
 }
 
-export const EMPTY_FILTERS: Filters = { scheme: [], category: [], recommendation: [], confidence: [], flagged: false }
+export const EMPTY_FILTERS: Filters = { scheme: [], category: [], recommendation: [], confidence: [], due: [], flagged: false }
 
 const CONF_RANK = { High: 0, Medium: 1, Low: 2 } as const
 
@@ -46,10 +48,12 @@ export function applyFilters(cases: CaseSummary[], tab: Tab, q: string, f: Filte
       if (!f.recommendation.includes(c.action ?? '') && !f.recommendation.includes(key)) return false
     }
     if (f.confidence.length && !f.confidence.includes(c.confidence ?? '')) return false
+    if (f.due.length && !f.due.includes(c.respond_by?.slice(0, 7) ?? '')) return false
     if (f.flagged && !c.flags.length && !c.needs_judgement) return false
     return true
   })
   const by: Record<SortKey, (a: CaseSummary, b: CaseSummary) => number> = {
+    deadline: (a, b) => (a.respond_by ?? '9999').localeCompare(b.respond_by ?? '9999') || a.case_id.localeCompare(b.case_id),
     newest: (a, b) => b.created_at.localeCompare(a.created_at) || b.case_id.localeCompare(a.case_id),
     chargeback: (a, b) => a.chargeback_date.localeCompare(b.chargeback_date),
     amount: (a, b) => b.amount.value - a.amount.value,
@@ -62,7 +66,7 @@ export function applyFilters(cases: CaseSummary[], tab: Tab, q: string, f: Filte
 }
 
 export function countFilters(f: Filters): number {
-  return f.scheme.length + f.category.length + f.recommendation.length + f.confidence.length + (f.flagged ? 1 : 0)
+  return f.scheme.length + f.category.length + f.recommendation.length + f.confidence.length + f.due.length + (f.flagged ? 1 : 0)
 }
 
 const DASH_KEY = 'exhibit.dashboardSearch'

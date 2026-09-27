@@ -9,9 +9,9 @@ A tour of an analyst's session: triage, open a case, check the evidence, overrid
 ![Dashboard](docs/screenshots/01-dashboard.png)
 
 - **New case** sits on top: drop evidence files or a case JSON on it, or click anywhere on it to open the form. **Import JSON** takes a case in the `cases.json` format.
-- **Cases** below, sorted **Easiest first** by default: high-confidence cases come first so they can be cleared quickly, and the ambiguous ones are left for when the analyst has attention to spare.
+- **Cases** below, sorted by **Deadline** by default: each card shows when the response is due, since a missed window loses the case. The dataset has no deadlines, so the date uses an illustrative window (Visa 30 days, Mastercard 45 days from the chargeback). **Easiest first** is the other useful order: high-confidence cases first, so they can be cleared quickly.
 - Each card answers the triage questions at a glance: who, how much, which rule, what the tool recommends and how sure it is. A warning icon means there's something to look at before deciding.
-- Tabs follow the case lifecycle (**To review, In review, Awaiting merchant, Completed**). Filters cover scheme, category, recommendation, confidence and flags. Everything is kept in the URL, so coming back from a case restores the same view.
+- Tabs follow the case lifecycle (**To review, In review, Awaiting merchant, Completed**). Filters cover scheme, category, recommendation, confidence, respond-by month and flags. Everything is kept in the URL, so coming back from a case restores the same view.
 
 ![List view](docs/screenshots/03-list-view.png)
 
@@ -75,7 +75,7 @@ The recommendation is **Accept liability** with **High** confidence. A merchant 
 
 ![No-show case](docs/screenshots/09-case-no-show.png)
 
-Case **CB-2025-0009** (hotel no-show) meets all four requirements. But reading the booking and the log together turns up a timing problem: the booking says the non-refundable rate was **charged at booking** on 12 March, while the disputed charge is dated **26 April**, before check-in time and before the guest was marked a no-show. The recommendation stays **Represent** and a **Data check** chip tells the analyst what to confirm before filing: that this is the only 215 EUR charge on the booking. It's a data mismatch rather than evidence against the claim, so it's shown without lowering confidence.
+Case **CB-2025-0009** (hotel no-show) meets all four requirements. But reading the booking and the log together turns up a timing problem: the booking says the non-refundable rate was **charged at booking** on 12 March, while the disputed charge is dated **26 April**, before check-in time and before the guest was marked a no-show. The recommendation stays **Represent**, confidence drops to **Medium** because the disputed charge doesn't match the merchant's own records, and the **Conflict** chip tells the analyst what to confirm before filing: that this is the only 215 EUR charge on the booking. The same check appears under "Before you file", kept out of the rationale that goes to the issuer.
 
 ---
 

@@ -83,6 +83,8 @@ class Flag(BaseModel):
     kind: Literal["conflict", "inconsistency"]
     text: str = Field(description="One or two sentences naming the documents or fields involved and what the analyst "
                                   "should check.")
+    disputed_charge: bool = Field(description="True when the flag is about the disputed transaction itself: its amount, "
+                                              "date or number of charges not matching the merchant's records.")
 
 
 class KeyDate(BaseModel):
@@ -104,6 +106,8 @@ class Assessment(BaseModel):
     rationale: str = Field(description="3 to 5 short points, one sentence each, one per line, ready to file.")
     merchant_requests: list[str] = Field(description="Two to five specific asks when recommended_action is "
                                                "request_more_evidence, otherwise empty.")
+    analyst_notes: list[str] = Field(description="Zero to three short internal notes for the analyst: checks to do or "
+                                                 "documents to obtain before filing, or follow-ups. Never filed.")
 
 
 class RationaleRewrite(BaseModel):

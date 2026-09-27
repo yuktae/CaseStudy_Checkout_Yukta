@@ -11,8 +11,8 @@
   "note": "This reason code generally cannot be represented. Recommend accepting liability unless the merchant can prove the transaction was miscoded by the issuer."
  },
  "summary": {
-  "allegation": "The issuer has raised the transaction under the Visa Fraud Monitoring Program, asserting that this GBP 78.50 payment of 30 April 2025 forms part of a merchant fraud-monitoring case rather than a standard disputed sale.",
-  "to_defend": "Under Visa 10.5 the only defence is proof that the issuer miscoded the transaction under the Visa Fraud Monitoring Program; evidence about the merits of the sale does not qualify."
+  "allegation": "The issuer has charged back the transaction under the Visa Fraud Monitoring Program, asserting that this transaction was identified as fraudulent within that programme rather than disputing the individual merits of the sale.",
+  "to_defend": "Visa allows a representment for 10.5 only where the merchant can show the transaction was miscoded by the issuer under the Fraud Monitoring Program."
  },
  "requirements": [
   {
@@ -21,8 +21,8 @@
    "text": "Evidence that the transaction was miscoded by the issuer under the Visa Fraud Monitoring Program.",
    "verdict": "missing",
    "ai_verdict": "missing",
-   "finding": "Nothing supplied addresses miscoding by the issuer. The merchant has filed a Visa Secure authentication record and a delivery confirmation, which speak to the legitimacy of the sale, not to whether the issuer wrongly coded it under the Visa Fraud Monitoring Program.",
-   "gap": "No evidence that the transaction was reported or coded in error under the Visa Fraud Monitoring Program, for example issuer or Visa correspondence confirming the case was raised against the wrong transaction or merchant identifier.",
+   "finding": "Nothing supplied addresses issuer miscoding under the Visa Fraud Monitoring Program. The two documents go to the merits of the sale (Visa Secure authentication and a delivery confirmation), which is not the exception this reason code allows.",
+   "gap": "No evidence that the issuer wrongly coded or reported this transaction under the Fraud Monitoring Program, for example Visa programme correspondence, a VFMP notification listing showing the transaction in error, or acquirer confirmation that the fraud report was withdrawn.",
    "fixable": false,
    "citations": [],
    "downgraded": null,
@@ -44,7 +44,7 @@
    "is_new": false,
    "label": "Visa Secure authentication record",
    "relevance": "not_relevant",
-   "reason": "Shows 3DS authentication for txn_1178ST but goes to the merits of the sale, not to issuer miscoding under the Fraud Monitoring Program, which is the only exception for 10.5.",
+   "reason": "Shows successful 3DS authentication for txn_1178ST, which goes to the merits of the fraud claim and does not evidence issuer miscoding under the Fraud Monitoring Program.",
    "pages": [
     {
      "page_no": 1,
@@ -61,9 +61,9 @@
    "kind": "pdf",
    "error": null,
    "is_new": false,
-   "label": "Carrier delivery confirmation, order BB-77231",
+   "label": "Order delivery confirmation, Evri tracking",
    "relevance": "not_relevant",
-   "reason": "Confirms delivery of the goods; delivery merits do not meet the miscoding exception required to represent a 10.5 chargeback.",
+   "reason": "Confirms delivery of order BB-77231, which is merits evidence and does not address the only defence available under 10.5.",
    "pages": [
     {
      "page_no": 1,
@@ -121,15 +121,23 @@
      "passed": true
     },
     {
+     "label": "The disputed charge matches the merchant's own records",
+     "passed": true
+    },
+    {
      "label": "The rule check and the AI recommendation agree",
      "passed": true
     }
    ]
   }
  },
- "justification": "Accept liability: R1, the sole defence for Visa 10.5, requires proof of issuer miscoding, and no such evidence exists in the file.",
- "rationale": "The issuer has processed this GBP 78.50 transaction of 30 April 2025 under Visa reason code 10.5, Visa Fraud Monitoring Program.\nReason code 10.5 cannot be represented except on proof that the issuer miscoded the transaction under the programme, and no such proof has been supplied.\nThe two documents filed, the Visa Secure record for txn_1178ST and the Evri delivery confirmation for order BB-77231 delivered 2 May 2025, address the merits of the sale only.\nStrong authentication data (3DS authenticated, AVS Y, CVV M) does not create a defence under this code.\nRecommend accepting liability and, separately, reviewing the merchant's fraud ratios with Visa outside the chargeback process.",
+ "justification": "Accept liability: R1 is missing, as no evidence shows the issuer miscoded the transaction under the Visa Fraud Monitoring Program, the only defence permitted for reason code 10.5.",
+ "rationale": "The chargeback is filed under Visa reason code 10.5, which may only be represented where the issuer miscoded the transaction under the Visa Fraud Monitoring Program.\nThe merchant has supplied a Visa Secure authentication record and an Evri delivery confirmation for order BB-77231, both of which address the merits of the sale rather than programme coding.\nNo Visa Fraud Monitoring Program correspondence or acquirer confirmation has been produced to show the transaction was reported or coded in error.\nWith the sole permitted defence unsupported, liability for the 78.50 GBP transaction of 30 April 2025 is accepted.",
  "merchant_requests": [],
+ "analyst_notes": [
+  "Strong merits evidence exists (3DS authenticated, ECI 05, AVS Y, CVV M, delivery to billing postcode SW4 7QR); worth raising with the acquirer whether the issuer should have filed under a different code or whether the fraud report can be withdrawn.",
+  "Confirm with the merchant whether they have received any VFMP or acquirer fraud monitoring notifications covering April 2025 before closing the case."
+ ],
  "model": "claude-opus-5",
  "rationale_for": "accept_liability"
 }

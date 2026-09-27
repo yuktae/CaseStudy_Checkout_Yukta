@@ -48,4 +48,5 @@ def tidy(workup: dict) -> dict:
     workup["justification"] = plain(workup.get("justification", ""))
     workup["rationale"] = points(workup.get("rationale", ""))
     workup["merchant_requests"] = [plain(x) for x in workup.get("merchant_requests", [])]
+    workup["analyst_notes"] = [plain(x) for x in workup.get("analyst_notes", [])]
     return workup

@@ -1,11 +1,11 @@
 import clsx from 'clsx'
 import { motion } from 'framer-motion'
-import { ChevronRight, Eye, FileSearch, FileWarning, RotateCcw, Scale, ShieldAlert, TriangleAlert } from 'lucide-react'
+import { CalendarClock, ChevronRight, Eye, FileSearch, FileWarning, RotateCcw, Scale, ShieldAlert, TriangleAlert } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { stageInfo } from '../../components/ProcessingDock'
 import { ActionPill, ConfidenceMeter, SchemeBadge, StatusChip } from '../../components/status'
 import { Tooltip } from '../../components/ui'
-import { money, shortDate } from '../../lib/format'
+import { money, RESPOND_BY_HELP, shortDate } from '../../lib/format'
 import type { CaseSummary, Job } from '../../lib/types'
 
 const FLAG_META: Record<string, { icon: typeof Eye; text: string }> = {
@@ -61,6 +61,14 @@ export function CaseCard({ c, job, onRetry, index }: { c: CaseSummary; job?: Job
           <span className="truncate text-[12.5px] text-text-2">{c.category}</span>
         </Tooltip>
       </div>
+      {c.respond_by && (
+        <Tooltip text={RESPOND_BY_HELP} className="mt-2.5 self-start">
+          <span className="flex items-center gap-1.5 text-[12.5px] text-text-2">
+            <CalendarClock className="size-3.5 text-muted" />
+            Respond by <span className="font-medium text-text">{shortDate(c.respond_by)}</span>
+          </span>
+        </Tooltip>
+      )}
 
       <div className="mt-auto pt-4">
         <div className="border-t border-line-2 pt-3.5">
@@ -127,6 +135,7 @@ export function CaseTable({ cases, jobs, onRetry }: { cases: CaseSummary[]; jobs
             <th className="px-3 font-semibold">Reason</th>
             <th className="px-3 text-right font-semibold">Amount</th>
             <th className="px-3 font-semibold">Chargeback</th>
+            <th className="px-3 font-semibold">Respond by</th>
             <th className="px-3 font-semibold">Recommendation</th>
             <th className="px-3 font-semibold">Confidence</th>
             <th className="px-3 font-semibold">Flags</th>
@@ -165,6 +174,7 @@ export function CaseTable({ cases, jobs, onRetry }: { cases: CaseSummary[]; jobs
                 </td>
                 <td className="px-3 text-right font-mono font-semibold tabular">{money(c.amount)}</td>
                 <td className="px-3 text-text-2 tabular">{shortDate(c.chargeback_date)}</td>
+                <td className="px-3 font-medium tabular">{c.respond_by ? shortDate(c.respond_by) : ''}</td>
                 <td className="px-3">
                   {c.status === 'processing' ? (
                     <span className="text-[12px] font-medium text-blue">{job ? stageInfo(job.stage).label : 'Queued'}…</span>

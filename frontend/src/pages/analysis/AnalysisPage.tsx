@@ -30,7 +30,7 @@ import { useToast } from '../../components/toast'
 import { Button, Skeleton, Tooltip } from '../../components/ui'
 import { api } from '../../lib/api'
 import { dashboardPath } from '../../lib/filters'
-import { ACTION_LABEL, COMPLETE_HELP, COMPLETE_LABEL, money, shortDate } from '../../lib/format'
+import { ACTION_LABEL, COMPLETE_HELP, COMPLETE_LABEL, money, RESPOND_BY_HELP, shortDate } from '../../lib/format'
 import type { Action, Alert, CaseDetail, Requirement, Review, Signal, Verdict, Workup } from '../../lib/types'
 import { AddEvidenceDialog, type Gap } from './AddEvidence'
 import { EvidenceSection } from './Evidence'
@@ -780,7 +780,14 @@ function CaseProfile({ detail, workup }: { detail: CaseDetail; workup: Workup })
           </Tooltip>
         </Cell>
         <Cell label="Chargeback">
-          <span className="font-medium whitespace-nowrap tabular">{shortDate(kase.chargeback_date)}</span>
+          <span className="flex flex-col">
+            <span className="font-medium whitespace-nowrap tabular">{shortDate(kase.chargeback_date)}</span>
+            {detail.respond_by && (
+              <Tooltip text={RESPOND_BY_HELP}>
+                <span className="text-[11.5px] whitespace-nowrap text-muted">Respond by {shortDate(detail.respond_by)}</span>
+              </Tooltip>
+            )}
+          </span>
         </Cell>
         <Cell label="Status">
           <StatusChip status={kase.status} />

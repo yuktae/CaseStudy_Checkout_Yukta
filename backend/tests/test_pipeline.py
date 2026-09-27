@@ -23,7 +23,7 @@ def req(rid, verdict, cites=(), fixable=True, gap=""):
 
 def fake_assessment(case, rule, docs):
     cid = case["case_id"]
-    common = dict(allegation="a", to_defend="d", justification="j", rationale="r", merchant_requests=[])
+    common = dict(allegation="a", to_defend="d", justification="j", rationale="r", merchant_requests=[], analyst_notes=[])
     if cid == "CB-2025-0007":
         return Assessment(**common, requirements=[
             req("R1", "satisfied", [("D1-p8", "Consignment TF-9051 (Stentor Bros, ref txn_7745MN): Collected from LS1 4DT")]),
@@ -46,7 +46,7 @@ def fake_assessment(case, rule, docs):
             req("R2", "not_applicable"),
             req("R3", "satisfied", [("D1-p1", "Delivered: 10 April 2025, 15:22")]),
             req("R4", "partial", [("D2-p1", "Note: this address was entered by the customer at checkout.")]),
-        ], documents=[], flags=[Flag(kind="conflict", text="Cardholder says the address is not theirs.")],
+        ], documents=[], flags=[Flag(kind="conflict", text="Cardholder says the address is not theirs.", disputed_charge=False)],
             key_dates=[KeyDate(label="delivery", date="2025-04-10", page_id="D1-p1", quote="Delivered: 10 April 2025, 15:22")],
             recommended_action="accept_liability")
     if cid == "CB-2025-0001":
@@ -61,7 +61,7 @@ def fake_assessment(case, rule, docs):
         return Assessment(**common, requirements=[
             req("R1", "missing", fixable=False), req("R2", "missing", fixable=False),
             req("R3", "missing", fixable=False), req("R4", "not_applicable"),
-        ], documents=[], flags=[Flag(kind="conflict", text="The report says legitimate; AVS and CVV failed.")],
+        ], documents=[], flags=[Flag(kind="conflict", text="The report says legitimate; AVS and CVV failed.", disputed_charge=False)],
             key_dates=[], recommended_action="accept_liability")
     raise AssertionError(f"no fixture for {cid}")
 
@@ -166,3 +166,16 @@ def test_document_text_cannot_close_prompt_tags():
     text = assess.build_content(case, rule, docs)[0]["text"]
     assert text.count("</page>") == 2 and text.count("</document>") == 1  # TXN page + D1 page, D1 document
     assert "&lt;/page>" in text
+
+
+def test_disputed_charge_mismatch_lowers_confidence():
+    reqs = [{"verdict": "satisfied", "citations": [], "vision_only": False}]
+    base = decide.score_confidence(reqs, "ALL", "represent", 0, 0, False)
+    hit = decide.score_confidence(reqs, "ALL", "represent", 0, 0, False, n_charge_mismatches=1)
+    accepting = decide.score_confidence(reqs, "ALL", "accept_liability", 0, 0, False, n_charge_mismatches=1)
+    assert (base["level"], hit["level"], accepting["level"]) == ("High", "Medium", "High")
+
+
+def test_respond_by_uses_the_scheme_window():
+    assert rules.respond_by({"scheme": "visa", "chargeback_date": "2025-04-18"}) == "2025-05-18"
+    assert rules.respond_by({"scheme": "mastercard", "chargeback_date": "2025-04-25"}) == "2025-06-09"

@@ -28,6 +28,15 @@ export const ACTION_LABEL: Record<Action, string> = {
   request_more_evidence: 'Request more evidence',
 }
 
+// The dataset has no deadlines: respond-by dates use an illustrative window per scheme (see rules.py).
+export const RESPOND_BY_HELP =
+  'Illustrative response window: 30 days from the chargeback for Visa, 45 for Mastercard. The simplified rules in the exercise leave out time limits.'
+
+export function monthLabel(ym: string): string {
+  const d = new Date(`${ym}-01T00:00:00`)
+  return Number.isNaN(d.getTime()) ? ym : d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
+}
+
 // What each decision means for the dispute.
 export const ACTION_HELP: Record<Action, string> = {
   represent: 'Fight the chargeback: the rationale is filed with the issuer as the merchant’s defence.',

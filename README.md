@@ -50,7 +50,7 @@ The split is deliberate: the LLM does the reading and the writing, and plain cod
 1. **Intake** (`main.py`, `pipeline.py`). The case is validated against the `cases.json` schema, the files are stored and a background job starts. Its progress shows in a small panel in the UI.
 2. **Reading the documents** (`documents.py`, `vision.py`). PDFs go through PyMuPDF, which gives the text and the position of every word. Images are read by a vision model, and RapidOCR finds where each line sits so it can be highlighted.
 3. **Rules and checks** (`rules.yaml`, `rules.py`). `reason_codes.md` is encoded as data: each code's requirements and whether it needs all of them, any two, any one, or can't be represented at all (Visa 10.5, Mastercard 4870). This step also builds the AVS, CVV, 3DS and address checks, and finds linked cases that share a device, IP or postcode.
-4. **Assessment** (`assess.py`). One structured LLM call per case. For each requirement it returns a verdict, a finding, verbatim quotes with their page, the gap and whether the merchant could fix it. It also marks irrelevant documents, flags conflicts, and drafts the rationale, justification and merchant requests. Merchant documents are passed as untrusted data: their text can't open or close the prompt's own sections, and the prompt tells the model to flag, not follow, any instructions found inside them.
+4. **Assessment** (`assess.py`). One structured LLM call per case. For each requirement it returns a verdict, a finding, verbatim quotes with their page, the gap and whether the merchant could fix it. It also marks irrelevant documents, flags conflicts, and drafts the rationale, justification and merchant requests. The rationale is written for the issuer; anything meant for the analyst (a check to make, a document to obtain before filing) goes in separate notes. Merchant documents are passed as untrusted data: their text can't open or close the prompt's own sections, and the prompt tells the model to flag, not follow, any instructions found inside them.
 5. **Checking every quote** (`locate.py`). Each quote is searched for in the extracted text (exact first, then fuzzy) and turned into highlight boxes. A quote on the wrong page is moved to the right one. A quote that can't be found doesn't count as evidence and lowers the verdict it supported.
 6. **The decision** (`decide.py`). The recommended action comes from the verified verdicts and the rule logic, not from the model. Delivery dates are checked against the chargeback date, using only dates whose quote was found in the documents. If the model's own recommendation disagrees, the case is flagged "Needs judgement" and a short second call rewrites the rationale so the text to file argues for the final action. Confidence always comes with the reasons that lowered it.
 
@@ -60,7 +60,7 @@ The frontend (`frontend/src`, React + TypeScript) has two pages: the dashboard (
 
 ![Dashboard](docs/screenshots/01-dashboard.png)
 
-**Dashboard.** The case queue, sorted easiest first so clean cases can be cleared quickly. Each card answers the triage questions: who, how much, which rule, what the tool recommends, how sure it is, and whether something needs a look. Tabs follow the case lifecycle, and filters and search are kept in the URL.
+**Dashboard.** The case queue, sorted by response deadline because a missed window loses the case whatever the evidence says ("Easiest first" is one click away). Each card answers the triage questions: who, how much, which rule, when the response is due, what the tool recommends, how sure it is, and whether something needs a look. Tabs follow the case lifecycle; filters (including the respond-by month) and search are kept in the URL. The dataset has no deadlines, so the respond-by date uses an illustrative window of 30 days from the chargeback for Visa and 45 for Mastercard (`rules.py`).
 
 ![Case analysis](docs/screenshots/11-case-analysis.png)
 
@@ -91,8 +91,9 @@ So it's a mix: PyMuPDF for PDF text and positions, a vision model to read images
 2. Images the evidence relies on are fully legible (the vision model rates each one).
 3. Every quoted passage was found in the documents.
 4. No conflict in the evidence. A conflict doesn't count when accepting, because a merchant claim that the data contradicts can only support accepting.
-5. The rule check and the AI recommendation agree.
-6. When accepting a case that could be represented, no requirement is partly met (otherwise it may be closer than it looks).
+5. The disputed charge matches the merchant's own records (amount, date, a single charge). Not counted when accepting.
+6. The rule check and the AI recommendation agree.
+7. When accepting a case that could be represented, no requirement is partly met (otherwise it may be closer than it looks).
 
 Data inconsistencies, such as a time-zone difference, are shown as notes but don't change the level. Hovering the confidence label on a case shows the reasons.
 

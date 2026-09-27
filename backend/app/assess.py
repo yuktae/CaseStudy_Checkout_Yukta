@@ -35,8 +35,9 @@ could not be read: mark them "unreadable".
 - Judge documents by their content, never by their filename; filenames can be wrong. Give each document a short \
 content_label (at most 6 words) describing what it actually is.
 - Apply the requirement wording as written. Records the merchant generated itself (system logs, internal records) are \
-valid evidence when they identify this transaction and the requirement allows them. If such a record is thin, say so \
-in the finding, but only lower the verdict when the requirement's wording is not met.
+valid evidence when they identify this transaction and the requirement allows them. When the merchant is itself the \
+carrier or the service provider, its own delivery or service records are the carrier confirmation. If such a record \
+is thin, say so in the finding, but only lower the verdict when the requirement's wording is not met.
 - Transaction metadata (AVS, CVV, 3DS, IP, device) is evidence too. Cite it with page_id "TXN". avs_result Y is a \
 full match, A means the address matched but the postcode did not (so not a full match), N is no match and None means \
 not checked. cvv_result M is a match, N no match, None not checked.
@@ -44,13 +45,16 @@ not checked. cvv_result M is a match, N no match, None not checked.
 stated in the rule counts. Evidence about the merits of the dispute does not meet the exception: mark the requirement \
 missing, say why in the finding and recommend accept_liability.
 - Compare the disputed transaction (amount, currency, date) with what the merchant's own documents say was charged \
-and when. If they do not line up, record a conflict that says what the analyst should confirm, for example that there \
-was only one charge. This does not change the verdicts, which follow the requirement wording.
+and when. If a document states a different amount, currency, date or number of charges, record a conflict with \
+disputed_charge set to true that says what the analyst should confirm, for example that there was only one charge. A \
+document that simply does not mention the amount is not a mismatch. This does not change the verdicts, which follow \
+the requirement wording.
 - Flags are for things the analyst must not miss, so keep them few (usually zero to two). Record a "conflict" when \
 specific facts contradict each other or a fact the cardholder raises is not answered by the evidence. The basic \
 disagreement between the cardholder's claim and the merchant's evidence is the dispute itself, not a conflict. Record \
-an "inconsistency" for data that does not line up, such as dates, amounts or IDs that differ between sources. Comments \
-on document quality belong in the finding or gap, not in flags.
+an "inconsistency" for other data that does not line up between sources, such as a time label, a reference or an ID. \
+A mismatch on the disputed charge itself is always a conflict. Comments on document quality belong in the finding or \
+gap, not in flags.
 - A gap is fixable when the merchant could plausibly supply the missing evidence (logs, records, photos). It is not \
 fixable when the facts cannot change, such as a verification check that failed at authorisation.
 
@@ -72,8 +76,11 @@ the date. The date checks are done in code.
 Writing:
 - allegation: what the issuer is alleging, in plain English. to_defend: what the scheme requires to defend it.
 - rationale: 3 to 5 short points the analyst can file after light editing, one sentence per point, each on its own \
-line, without numbering or bullet characters. Cover the claim, the decisive evidence with specifics (dates, IDs, \
-amounts), and the conclusion. No hedging filler.
+line, without numbering or bullet characters. It is written for the issuer and filed as is, so it contains only the \
+case for the recommended action: the claim, the decisive evidence with specifics (dates, IDs, amounts), and the \
+conclusion. No hedging filler, and nothing addressed to colleagues.
+- analyst_notes: zero to three short internal notes for the analyst, such as a check to make or a document to obtain \
+from the merchant before filing. Never put these in the rationale or the justification.
 - In the text you write (not in quotes), use commas or full stops, never em or en dashes.
 - justification: one line explaining the recommended action and naming the requirement that decides it. The \
 rationale and justification must argue for the recommended_action you give, never for a different one.
@@ -86,7 +93,8 @@ empty. Each item must be specific and actionable (what record, for which order o
 REWRITE_SYSTEM = """You rewrite a chargeback representment rationale so that it argues for the action the rule check \
 recommends. Use only the facts in the findings you are given and do not add evidence.
 - rationale: 3 to 5 short points, one sentence per point, each on its own line, without numbering or bullet \
-characters. Cover the claim, the decisive facts with specifics, and the conclusion for the recommended action.
+characters. It is written for the issuer and filed as is: the claim, the decisive facts with specifics, and the \
+conclusion for the recommended action, with nothing addressed to colleagues.
 - justification: one line explaining the recommended action and naming the requirement that decides it.
 - Use commas or full stops, never em or en dashes."""
 

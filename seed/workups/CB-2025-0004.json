@@ -11,8 +11,8 @@
   "note": null
  },
  "summary": {
-  "allegation": "The issuer says the cardholder did not authorise the 87.40 GBP payment to QuickStream Digital on 29 April 2025, that the card was in the cardholder's possession at the time, and that the cardholder has no relationship with the merchant.",
-  "to_defend": "Mastercard requires any two of: full AVS plus CVV match, successful 3D Secure authentication, two prior undisputed transactions from the same cardholder, or signed proof of delivery to the billing address."
+  "allegation": "The issuer states the cardholder did not authorise the 29 April 2025 charge of GBP 87.40 at QuickStream Digital, that the card was in the cardholder's possession, and that the cardholder has no relationship with the merchant.",
+  "to_defend": "Mastercard requires any two of: full AVS plus CVV match, successful 3D Secure authentication, two prior undisputed transactions with matching billing details, or signed proof of delivery to the billing address."
  },
  "requirements": [
   {
@@ -21,8 +21,8 @@
    "text": "AVS match (full address) AND CVV match on the disputed transaction.",
    "verdict": "missing",
    "ai_verdict": "missing",
-   "finding": "Authorisation data for txn_7762GH shows avs_result N (no address match) and cvv_result N (no CVV match), so neither half of this requirement is met.",
-   "gap": "No AVS or CVV match exists on the disputed authorisation.",
+   "finding": "Transaction metadata shows avs_result N and cvv_result N, so neither the address nor the security code matched at authorisation.",
+   "gap": "Both AVS and CVV failed at authorisation; no matching verification exists for this transaction.",
    "fixable": false,
    "citations": [],
    "downgraded": null,
@@ -36,8 +36,8 @@
    "text": "3D Secure authentication completed successfully (Mastercard SecureCode / Identity Check).",
    "verdict": "missing",
    "ai_verdict": "missing",
-   "finding": "The transaction metadata records three_ds_status as not_attempted, so no Mastercard Identity Check authentication was performed.",
-   "gap": "No 3D Secure authentication was carried out at the time of the transaction and none can be created after the fact.",
+   "finding": "Transaction metadata records three_ds_status as not_attempted, so no Mastercard Identity Check authentication was performed.",
+   "gap": "No 3D Secure authentication was attempted at the time of the transaction and this cannot be created after the fact.",
    "fixable": false,
    "citations": [],
    "downgraded": null,
@@ -51,29 +51,10 @@
    "text": "Two prior undisputed transactions from the same cardholder with this merchant in the past 12 months, with matching billing details.",
    "verdict": "missing",
    "ai_verdict": "missing",
-   "finding": "No prior transaction history was supplied, and the merchant's own screening report states the customer account age is New (first transaction), which rules out two prior undisputed transactions.",
-   "gap": "There are no earlier transactions from this cardholder with this merchant to evidence.",
+   "finding": "The merchant's own report describes the customer account age as new and first transaction, with 24h velocity of one transaction, so there are no two prior undisputed transactions.",
+   "gap": "No prior transaction history with this cardholder exists; the merchant's own record states this was the first transaction.",
    "fixable": false,
-   "citations": [
-    {
-     "page_id": "D1-p1",
-     "quote": "Customer account age\nNew (first transaction)",
-     "doc_key": "D1",
-     "page_no": 1,
-     "verified": true,
-     "match": "exact",
-     "rects": [
-      [
-       0.12661,
-       0.43096,
-       0.65962,
-       0.44922
-      ]
-     ],
-     "source": "text",
-     "relocated": false
-    }
-   ],
+   "citations": [],
    "downgraded": null,
    "date_check": null,
    "vision_only": false,
@@ -85,7 +66,7 @@
    "text": "Proof of delivery to the cardholder's billing address with signature.",
    "verdict": "not_applicable",
    "ai_verdict": "not_applicable",
-   "finding": "MCC 5815 is digital media and the transaction carries no shipping address (shipping_address_postcode: None), so nothing was physically shipped and signed proof of delivery cannot exist.",
+   "finding": "This is an MCC 5815 digital media purchase with no shipping address recorded in the transaction metadata, so no physical delivery with signature could have occurred.",
    "gap": "",
    "fixable": false,
    "citations": [],
@@ -108,7 +89,7 @@
    "is_new": false,
    "label": "Merchant internal fraud screening report",
    "relevance": "not_relevant",
-   "reason": "An internal risk score and conclusion of legitimacy is the merchant's own opinion, not AVS/CVV, 3DS, prior transaction or delivery evidence; it addresses none of R1 to R4.",
+   "reason": "An internal risk score generated on 12 May 2025 does not evidence AVS/CVV match, 3D Secure, prior transaction history or delivery, and it confirms this was the customer's first transaction.",
    "pages": [
     {
      "page_no": 1,
@@ -122,14 +103,10 @@
  ],
  "alerts": [
   {
-   "type": "conflict",
-   "severity": "warn",
-   "text": "The issuer states the cardholder has no relationship with the merchant and the merchant's own report confirms a new account on its first transaction, so there is no history to rebut the claim; confirm no other customer record exists under this billing postcode E14 5AB."
-  },
-  {
    "type": "inconsistency",
    "severity": "info",
-   "text": "D1 is dated 12 May 2025, the day after the 11 May 2025 chargeback, so it was produced for the dispute rather than at the time of the transaction; check whether any contemporaneous screening record exists for 29 April 2025."
+   "text": "D1 concludes the transaction passed fraud screening and is legitimate, but it omits that AVS and CVV both returned N and 3D Secure was not attempted per the transaction metadata; the analyst should rely on the authorisation data, not the internal score.",
+   "disputed_charge": false
   }
  ],
  "key_dates": [],
@@ -145,7 +122,6 @@
     "Every requirement the decision relies on is backed by verified evidence"
    ],
    "notes": [
-    "Conflicting evidence flagged; it does not make accepting riskier",
     "1 data inconsistency to check"
    ],
    "checks": [
@@ -170,15 +146,23 @@
      "passed": true
     },
     {
+     "label": "The disputed charge matches the merchant's own records",
+     "passed": true
+    },
+    {
      "label": "The rule check and the AI recommendation agree",
      "passed": true
     }
    ]
   }
  },
- "justification": "Accept liability: R1 fails on avs_result N and cvv_result N, R2 fails on three_ds_status not_attempted, R3 fails as this was the account's first transaction and R4 cannot apply, so the two-requirement threshold cannot be reached.",
- "rationale": "The issuer alleges the 87.40 GBP transaction txn_7762GH of 29 April 2025 was not authorised and that the cardholder has no relationship with QuickStream Digital.\nAuthorisation data shows no address match (AVS N), no CVV match (CVV N) and no 3D Secure attempt, so R1 and R2 both fail on facts that cannot be changed.\nThe merchant's own screening report records the customer account age as New (first transaction), so the two prior undisputed transactions required by R3 do not exist.\nR4 cannot apply because MCC 5815 is digital media with no shipping address recorded, so no signed delivery proof is possible.\nWith zero of the required two conditions met and a new device fingerprint and 03:42 UTC timing supporting the fraud claim, the case is not defensible and liability should be accepted.",
+ "justification": "Accept liability: with R1 and R2 failed at authorisation and R3 contradicted by the merchant's own record of a first-time customer, the two-requirement threshold cannot be met and R4 cannot apply to this digital MCC 5815 sale.",
+ "rationale": "The cardholder denies authorising the GBP 87.40 charge of 29 April 2025 (txn_7762GH) at QuickStream Digital.\nAuthorisation data shows AVS result N and CVV result N, so neither the billing address nor the security code matched.\n3D Secure was not attempted, so there is no Identity Check authentication to rely on.\nThe merchant's own screening report records the customer account as new with this as the first transaction, so there is no prior undisputed transaction history, and no goods were shipped for this digital MCC 5815 purchase.\nThe Mastercard compelling evidence threshold cannot be met and liability is accepted.",
  "merchant_requests": [],
+ "analyst_notes": [
+  "Transaction was placed at 03:42 UTC from an unseen device fingerprint and an IP in a high risk range, which supports the fraud claim.",
+  "Confirm with the merchant whether any account login or product access logs exist before closing, though they would not satisfy any of the four requirements."
+ ],
  "model": "claude-opus-5",
  "rationale_for": "accept_liability"
 }

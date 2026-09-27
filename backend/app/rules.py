@@ -1,5 +1,6 @@
 """Scheme rules (from rules.yaml), transaction signal chips and linked-case detection. Pure code, no LLM."""
 
+from datetime import date, timedelta
 from functools import lru_cache
 from pathlib import Path
 
@@ -14,6 +15,19 @@ LOGIC_LABELS = {
     "EITHER": "Either branch",
     "AUTO_ACCEPT": "Not representable",
 }
+
+
+# Days an acquirer has to respond, counted from the chargeback date. Illustrative only: the simplified rules in the
+# exercise leave out time limits, and real windows depend on the scheme, the reason code and the dispute stage.
+RESPONSE_DAYS = {"visa": 30, "mastercard": 45}
+
+
+def respond_by(case: dict) -> str | None:
+    try:
+        raised = date.fromisoformat(case["chargeback_date"][:10])
+    except (KeyError, ValueError):
+        return None
+    return (raised + timedelta(days=RESPONSE_DAYS.get(case["scheme"].lower(), 30))).isoformat()
 
 
 @lru_cache

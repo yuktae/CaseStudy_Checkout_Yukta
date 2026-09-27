@@ -217,7 +217,7 @@ export function RationaleSection({ value, edited, aiChanged, writtenFor, recomme
           </button>
         )}
         <div className="mt-3 flex items-center justify-between">
-          <span className="text-xs text-muted">{edited ? 'Edited by you' : 'Drafted by AI, ready to edit'}</span>
+          <span className="text-xs text-muted">{edited ? 'Edited by you' : 'Drafted by AI for the issuer, ready to edit'}</span>
           <div className="flex gap-1.5">
             {edited && !readOnly && (
               <Button size="sm" variant="ghost" icon={<RotateCcw className="size-3.5" />} onClick={onReset}>
@@ -327,6 +327,20 @@ export function ActionSection({ workup, action, onAction, reason, onReason, just
             className="!rounded-lg !border-white/15 !bg-white/10 !px-3 !py-2 text-[13.5px] leading-snug !text-white focus:!border-white/40 focus:!ring-white/10"
           />
         </div>
+
+        {(workup.analyst_notes ?? []).length > 0 && (
+          <div className="mt-4 rounded-lg bg-white/10 px-3 py-2.5">
+            <p className="mb-1.5 text-[11px] font-semibold tracking-wide text-white/60 uppercase">Before you file · not part of the rationale</p>
+            <ul className="space-y-1 text-[12.5px] leading-snug text-white/90">
+              {workup.analyst_notes!.map((n) => (
+                <li key={n} className="flex gap-2">
+                  <span className="mt-[7px] size-1 shrink-0 rounded-full bg-white/60" />
+                  {n}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <AnimatePresence initial={false}>
           {changed && (

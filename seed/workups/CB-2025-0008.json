@@ -11,8 +11,8 @@
   "note": null
  },
  "summary": {
-  "allegation": "The cardholder says they cancelled their FluxFit Online subscription on 18 March 2025 but were billed 29.99 GBP again on 20 April 2025, and the issuer seeks reversal as a cancelled recurring transaction.",
-  "to_defend": "Visa requires the merchant to show the disclosed recurring terms and cancellation method, proof of the cardholder's original opt-in, advance notice of the renewal charge, and that no cancellation request was received before the 20 April 2025 billing date."
+  "allegation": "The cardholder says they cancelled their FluxFit Online subscription on 18 March 2025 but were still billed 29.99 GBP on 20 April 2025, and the issuer seeks reversal under Visa 13.2.",
+  "to_defend": "Visa requires the merchant to show the disclosed recurring terms and cancellation method, proof of the cardholder's original opt-in, evidence of the advance renewal notice, and a record that no cancellation request was received before the 20 April 2025 billing date."
  },
  "requirements": [
   {
@@ -21,7 +21,7 @@
    "text": "Terms of service disclosing the recurring billing arrangement and the cancellation method.",
    "verdict": "satisfied",
    "ai_verdict": "satisfied",
-   "finding": "The submitted membership terms disclose monthly auto-renewal until cancelled and give two cancellation routes (account dashboard or support email), which meets the wording of this requirement, although the document is the generic published version rather than the copy accepted by this cardholder.",
+   "finding": "The membership terms disclose monthly auto-renewal until cancelled and give two cancellation methods, the account dashboard or emailing support, in version terms_v3.2 published February 2025.",
    "gap": "",
    "fixable": false,
    "citations": [
@@ -67,8 +67,8 @@
    "text": "Evidence the cardholder was notified of the upcoming charge (typically 7 days in advance) for transactions over a defined threshold.",
    "verdict": "missing",
    "ai_verdict": "missing",
-   "finding": "The terms promise an email at least 5 days before each renewal, but no copy or send log of a renewal notice for the 20 April 2025 charge of 29.99 GBP was provided; a policy promise is not proof that the notice was sent.",
-   "gap": "No dated renewal notification email or email service delivery log addressed to this cardholder ahead of the 20 April 2025 billing.",
+   "finding": "The terms only promise that members will be emailed at least 5 days before renewal; no send record, copy or log of a renewal notice for the 20 April 2025 charge of 29.99 GBP was provided, and a policy statement is not proof the notice was sent.",
+   "gap": "No copy of the pre-renewal email to this cardholder with a send timestamp or delivery log for the April 2025 renewal.",
    "fixable": true,
    "citations": [],
    "downgraded": null,
@@ -82,8 +82,8 @@
    "text": "No record of the cardholder having submitted a cancellation request prior to the billing date.",
    "verdict": "missing",
    "ai_verdict": "missing",
-   "finding": "Nothing in the file speaks to the cardholder's cancellation claim of 18 March 2025; there is no account activity log, support inbox record or CRM extract showing the absence of a cancellation request before 20 April 2025.",
-   "gap": "No subscription status history or support ticket/email search covering 1 March to 20 April 2025 for this account.",
+   "finding": "Nothing in the file addresses the cardholder's stated cancellation of 18 March 2025; there is no account audit trail, support inbox search or system log showing no cancellation request was received before 20 April 2025.",
+   "gap": "No subscription account log or support ticket record covering March to April 2025 for this cardholder.",
    "fixable": true,
    "citations": [],
    "downgraded": null,
@@ -97,8 +97,8 @@
    "text": "Evidence of the cardholder's original opt-in to the recurring arrangement.",
    "verdict": "missing",
    "ai_verdict": "missing",
-   "finding": "No signup record, checkout confirmation, consent timestamp or subscription start date for this cardholder was supplied; the only document is the generic published terms, which applies to all members rather than evidencing this cardholder's opt-in.",
-   "gap": "No enrolment record (date, IP/device, account email, accepted terms version) tying this cardholder to the recurring arrangement.",
+   "finding": "No signup or enrolment record for this cardholder was supplied: the only document is the generic published terms document that applies to all members, with no account identifier, date or consent capture. Authorisation data (AVS Y, CVV M, frictionless 3DS) supports the 20 April charge but does not evidence the original opt-in.",
+   "gap": "No enrolment record showing the date, account and consent capture for the recurring arrangement.",
    "fixable": true,
    "citations": [],
    "downgraded": null,
@@ -118,7 +118,7 @@
    "kind": "pdf",
    "error": null,
    "is_new": false,
-   "label": "Generic published membership terms",
+   "label": "Generic membership terms and conditions",
    "relevance": "used",
    "reason": "",
    "pages": [
@@ -136,12 +136,14 @@
   {
    "type": "conflict",
    "severity": "warn",
-   "text": "The cardholder's specific claim of a cancellation on 18 March 2025 is not answered by any merchant record; confirm the subscription status history and support inbox before representing."
+   "text": "The cardholder states they cancelled on 18 March 2025 and the merchant has filed nothing that answers that claim, no account log or support record for the cancellation window; confirm with the merchant before filing.",
+   "disputed_charge": false
   },
   {
    "type": "inconsistency",
    "severity": "info",
-   "text": "D1 promises renewal notice at least 5 days in advance while the requirement contemplates roughly 7 days' notice; check whether any notice was in fact sent for the 20 April 2025 charge and when."
+   "text": "D1 promises renewal notice at least 5 days in advance, which is short of the 7 day advance notice contemplated by the 13.2 requirement; check which notice standard applies at this amount.",
+   "disputed_charge": false
   }
  ],
  "key_dates": [],
@@ -177,20 +179,28 @@
      "passed": false
     },
     {
+     "label": "The disputed charge matches the merchant's own records",
+     "passed": true
+    },
+    {
      "label": "The rule check and the AI recommendation agree",
      "passed": true
     }
    ]
   }
  },
- "justification": "R3 and R4 are unsupported and R2 has only a policy promise, so the case cannot be filed until the merchant supplies account and notification records.",
- "rationale": "The issuer alleges the 29.99 GBP charge of 20 April 2025 followed a cancellation made on 18 March 2025.\nThe only evidence filed is the generic terms_v3.2 document, which discloses monthly auto-renewal and two cancellation routes and satisfies R1.\nNo opt-in record, renewal notice or account status log for this cardholder was supplied, leaving R2, R3 and R4 unsupported.\nTransaction data (AVS Y, CVV M, 3DS frictionless) supports card validity but says nothing about consent to continued billing or cancellation.\nHold representment until the merchant produces signup, notification and cancellation records for this account.",
+ "justification": "R3 and R4 decide this: without an account log showing no cancellation before 20 April 2025 and an opt-in record, the case cannot be filed, but the merchant could plausibly supply both.",
+ "rationale": "FluxFit Online's published terms disclose monthly auto-renewal and two cancellation routes, the account dashboard or support@fluxfit.example.\nThe cardholder was billed 29.99 GBP on 20 April 2025 on transaction txn_8856OP, authorised with a full AVS match, CVV match and frictionless 3DS.\nThe merchant has not yet produced the account record showing whether a cancellation was submitted on or around 18 March 2025.\nNo copy of the pre-renewal notice for the April 2025 billing and no original opt-in record have been supplied.\nAdditional merchant records are being obtained before a representment is filed.",
  "merchant_requests": [
-  "Subscription account history for this cardholder showing signup date, plan, status changes and any cancellation request between 1 March and 20 April 2025",
-  "Copy of the renewal notification email sent before the 20 April 2025 charge, with the email service send/delivery log showing recipient and timestamp",
-  "Original opt-in record: checkout or signup confirmation showing date, account email, accepted terms version and the 29.99 GBP monthly price",
-  "Search of support@fluxfit.example and the ticketing system for any message from this cardholder around 18 March 2025, including a nil result export",
-  "Billing ledger for this account listing all charges and refunds, confirming the 20 April 2025 charge of 29.99 GBP was the only charge disputed"
+  "Subscription account audit log for this cardholder covering 1 March 2025 to 20 April 2025 showing all cancellation, pause and status change events",
+  "Search of support@fluxfit.example and the ticketing system for any message from this cardholder between 15 and 25 March 2025, including a nil result statement if none exists",
+  "Copy of the pre-renewal notification email sent before the 20 April 2025 charge, with the send or delivery log showing recipient address and timestamp",
+  "Original signup record for the recurring arrangement: date, account ID, terms version accepted and consent capture (checkbox or confirmation screen)",
+  "Billing history for this account confirming a single charge of 29.99 GBP on 20 April 2025 and no duplicate or subsequent charges"
+ ],
+ "analyst_notes": [
+  "D1 is the generic published terms document with no account identifier; ask for the version tied to this member's signup.",
+  "Confirm the dashboard cancellation flow logs an event even if the member does not complete it, so a nil log result is meaningful."
  ],
  "model": "claude-opus-5",
  "rationale_for": "request_more_evidence"

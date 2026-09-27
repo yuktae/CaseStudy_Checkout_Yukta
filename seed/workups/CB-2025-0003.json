@@ -11,8 +11,8 @@
   "note": null
  },
  "summary": {
-  "allegation": "The issuer says the cardholder did not authorise the 1,240.50 EUR charge of 1 April 2025 and suggests their card details were compromised.",
-  "to_defend": "Mastercard requires any two of: full AVS plus CVV match, successful Identity Check authentication, two prior undisputed transactions, or signed proof of delivery to the billing address."
+  "allegation": "The issuer says the cardholder did not authorise the 1,240.50 EUR charge of 1 April 2025 and suggests the card details were compromised.",
+  "to_defend": "Mastercard requires any two of the listed compelling evidence items, such as a full AVS plus CVV match, successful Identity Check authentication, two prior undisputed transactions or signed delivery to the billing address."
  },
  "requirements": [
   {
@@ -21,7 +21,7 @@
    "text": "AVS match (full address) AND CVV match on the disputed transaction.",
    "verdict": "satisfied",
    "ai_verdict": "satisfied",
-   "finding": "Transaction metadata records avs_result Y (full address match) and cvv_result M (match), and the gateway authorisation log for txn_4412EF confirms both checks passed at authorisation.",
+   "finding": "Transaction metadata and the gateway authorisation log both record a full address AVS match (Y) and a CVV match (M) on txn_4412EF.",
    "gap": "",
    "fixable": false,
    "citations": [
@@ -95,7 +95,7 @@
    "text": "3D Secure authentication completed successfully (Mastercard SecureCode / Identity Check).",
    "verdict": "satisfied",
    "ai_verdict": "satisfied",
-   "finding": "Mastercard Identity Check completed successfully for txn_4412EF with ECI 02, an authentication value present and a DS transaction ID, authenticated frictionlessly by the issuer BNP Paribas at 11:08:18 UTC on 1 April 2025.",
+   "finding": "Mastercard Identity Check completed successfully for this transaction with ECI 02, an authentication value and a DS transaction ID, timestamped seconds before authorisation.",
    "gap": "",
    "fixable": false,
    "citations": [
@@ -119,7 +119,7 @@
     },
     {
      "page_id": "D2-p1",
-     "quote": "ECI\n02",
+     "quote": "Transaction\ntxn_4412EF",
      "doc_key": "D2",
      "page_no": 1,
      "verified": true,
@@ -127,9 +127,9 @@
      "rects": [
       [
        0.12661,
-       0.27417,
-       0.43417,
-       0.29251
+       0.16727,
+       0.49888,
+       0.18561
       ]
      ],
      "source": "text",
@@ -158,8 +158,8 @@
    "text": "Two prior undisputed transactions from the same cardholder with this merchant in the past 12 months, with matching billing details.",
    "verdict": "missing",
    "ai_verdict": "missing",
-   "finding": "No record of any prior transaction by this cardholder with Velo Continental Rentals was supplied; the only related datum is a device fingerprint noted as a \"Returning device (seen 3x)\", which does not identify two prior undisputed transactions or matching billing details.",
-   "gap": "No transaction history listing two prior undisputed purchases in the past 12 months with matching billing details.",
+   "finding": "No transaction history was supplied; the only related datapoint is a device fingerprint noted as a returning device, which does not identify two prior undisputed transactions or matching billing details.",
+   "gap": "No record of two prior undisputed purchases by this cardholder in the past 12 months with matching billing details.",
    "fixable": true,
    "citations": [],
    "downgraded": null,
@@ -173,7 +173,7 @@
    "text": "Proof of delivery to the cardholder's billing address with signature.",
    "verdict": "not_applicable",
    "ai_verdict": "not_applicable",
-   "finding": "MCC 7512 is vehicle rental and the record shows a rental service rather than a shipped item, so there is no consignment that could carry signed proof of delivery to the billing address.",
+   "finding": "MCC 7512 is vehicle rental and the booking involved no shipment of goods, so signed proof of delivery to the billing address cannot exist for this transaction.",
    "gap": "",
    "fixable": false,
    "citations": [],
@@ -194,7 +194,7 @@
    "kind": "pdf",
    "error": null,
    "is_new": false,
-   "label": "Gateway authorisation log, AVS/CVV/3DS",
+   "label": "Gateway authorisation log for transaction",
    "relevance": "used",
    "reason": "",
    "pages": [
@@ -213,7 +213,7 @@
    "kind": "pdf",
    "error": null,
    "is_new": false,
-   "label": "Identity Check authentication record",
+   "label": "Mastercard Identity Check authentication record",
    "relevance": "used",
    "reason": "",
    "pages": [
@@ -259,15 +259,23 @@
      "passed": true
     },
     {
+     "label": "The disputed charge matches the merchant's own records",
+     "passed": true
+    },
+    {
      "label": "The rule check and the AI recommendation agree",
      "passed": true
     }
    ]
   }
  },
- "justification": "Represent: R1 (full AVS and CVV match) and R2 (successful Identity Check authentication) are both satisfied, meeting the any-two threshold for 4837.",
- "rationale": "The issuer alleges the 1,240.50 EUR charge of 1 April 2025 (txn_4412EF) was not authorised by the cardholder.\nThe gateway authorisation log shows a full address AVS match (Y) and a CVV match (M) on that same transaction.\nMastercard Identity Check authenticated the cardholder frictionlessly at 11:08:18 UTC on 1 April 2025, ECI 02, authentication value present, DS transaction ID ds_4b2e1100c4, issuer BNP Paribas.\nBilling and shipping postcodes both read 75011 and the Paris IP 90.84.21.117 is consistent with an FR-issued card.\nTwo of the four requirements are satisfied, so the case meets the threshold to represent.",
+ "justification": "Represent: R1 (full AVS plus CVV match) and R2 (successful Identity Check authentication) are both satisfied, meeting the any two requirement.",
+ "rationale": "The cardholder disputes a 1,240.50 EUR charge of 1 April 2025 as unauthorised.\nTransaction txn_4412EF returned a full address AVS match (Y) and a CVV match (M) at authorisation, evidenced by the gateway authorisation log.\nMastercard Identity Check authenticated the cardholder with the issuing bank at 2025-04-01 11:08:18 UTC, ECI 02, authentication ID ic_77f31a82bb, DS transaction ID ds_4b2e1100c4.\nThe order was placed from a Paris IP address (90.84.21.117) on a device previously seen with this merchant, matching the FR-issued card and the 75011 billing postcode.\nTwo of the required compelling evidence items are met, so the chargeback is defended and the amount should be represented.",
  "merchant_requests": [],
+ "analyst_notes": [
+  "If available, ask the merchant for two prior undisputed orders on this card in the last 12 months to add R3 as a third item.",
+  "D2 asserts that liability rests with the issuer; keep the filing to the factual authentication data rather than repeating that claim."
+ ],
  "model": "claude-opus-5",
  "rationale_for": "represent"
 }

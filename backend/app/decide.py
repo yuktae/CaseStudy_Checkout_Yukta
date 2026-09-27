@@ -44,7 +44,7 @@ def _code_action(logic: str, reqs: list[dict]) -> str:
 
 
 def score_confidence(requirements: list[dict], logic: str, action: str, n_conflicts: int, n_inconsistencies: int,
-                     needs_judgement: bool) -> dict:
+                     needs_judgement: bool, n_charge_mismatches: int = 0) -> dict:
     """Confidence in the recommended action.
 
     It starts at 3 points (High) and each check below that fails costs one point: 3 is High, 2 is Medium, 0 or 1
@@ -76,6 +76,9 @@ def score_confidence(requirements: list[dict], logic: str, action: str, n_confli
         # A merchant claim that the data contradicts can only support accepting, so it only counts otherwise.
         ("No conflict in the evidence", not n_conflicts or accepting,
          "Evidence conflicts with the claim or the transaction data"),
+        # The disputed charge not matching the merchant's own records can mean the charge itself is wrong.
+        ("The disputed charge matches the merchant's own records", not n_charge_mismatches or accepting,
+         "The disputed charge doesn't match the merchant's own records"),
         ("The rule check and the AI recommendation agree", not needs_judgement,
          "Rule check and AI recommendation disagree"),
     ]
@@ -94,10 +97,12 @@ def score_confidence(requirements: list[dict], logic: str, action: str, n_confli
 
 def explain_confidence(workup: dict) -> dict:
     """Recompute confidence (with its checks) from a stored workup, so older analyses show the breakdown too."""
-    kinds = [a["type"] for a in workup["alerts"]]
+    flags = [a for a in workup["alerts"] if a["type"] in ("conflict", "inconsistency")]
+    other = [a["type"] for a in flags if not a.get("disputed_charge")]
     d = workup["decision"]
     d["confidence"] = score_confidence(workup["requirements"], workup["rule"]["logic"], d["code_action"],
-                                       kinds.count("conflict"), kinds.count("inconsistency"), d["needs_judgement"])
+                                       other.count("conflict"), other.count("inconsistency"), d["needs_judgement"],
+                                       n_charge_mismatches=len(flags) - len(other))
     return workup
 
 
@@ -154,11 +159,14 @@ def build_workup(case: dict, rule: dict, docs: list[dict], assessment: Assessmen
     ai_action = assessment.recommended_action
     needs_judgement = code_action != ai_action
 
+    charge_flags = [f for f in assessment.flags if f.disputed_charge]
     conflicts = [f for f in assessment.flags if f.kind == "conflict"]
     inconsistencies = [f for f in assessment.flags if f.kind == "inconsistency"]
     unverified = [c for r in requirements for c in r["citations"] if not c["verified"]]
-    confidence = score_confidence(requirements, rule["logic"], code_action, len(conflicts), len(inconsistencies),
-                                  needs_judgement)
+    confidence = score_confidence(requirements, rule["logic"], code_action,
+                                  sum(not f.disputed_charge for f in conflicts),
+                                  sum(not f.disputed_charge for f in inconsistencies), needs_judgement,
+                                  n_charge_mismatches=len(charge_flags))
 
     # ------------------------------------------------------------- documents
     doc_views = []
@@ -183,9 +191,12 @@ def build_workup(case: dict, rule: dict, docs: list[dict], assessment: Assessmen
                        "text": f"{rule['scheme'].title()} {rule['code']} generally cannot be represented. "
                                "The evidence is shown but does not change the outcome unless it proves miscoding."})
     for f in conflicts:
-        alerts.append({"type": "conflict", "severity": "warn", "text": f.text})
+        alerts.append({"type": "conflict", "severity": "warn", "text": f.text, "disputed_charge": f.disputed_charge})
     for f in inconsistencies:
-        alerts.append({"type": "inconsistency", "severity": "info", "text": f.text})
+        # A mismatch on the disputed charge is shown as a conflict whatever the model called it.
+        alerts.append({"type": "conflict" if f.disputed_charge else "inconsistency",
+                       "severity": "warn" if f.disputed_charge else "info", "text": f.text,
+                       "disputed_charge": f.disputed_charge})
     if needs_judgement:
         alerts.append({"type": "judgement", "severity": "warn",
                        "text": "The rule check and the AI recommendation disagree. Review both before deciding."})
@@ -240,4 +251,5 @@ def build_workup(case: dict, rule: dict, docs: list[dict], assessment: Assessmen
         "justification": assessment.justification,
         "rationale": assessment.rationale,
         "merchant_requests": requests,
+        "analyst_notes": list(assessment.analyst_notes),
     })

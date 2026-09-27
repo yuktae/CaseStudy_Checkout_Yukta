@@ -8,7 +8,7 @@ import { useWithCode } from '../../components/AccessCode'
 import { useJobs } from '../../components/ProcessingDock'
 import { Skeleton } from '../../components/ui'
 import { api } from '../../lib/api'
-import { ACTION_LABEL } from '../../lib/format'
+import { ACTION_LABEL, monthLabel } from '../../lib/format'
 import {
   applyFilters,
   CATEGORIES,
@@ -42,13 +42,14 @@ export function Dashboard() {
   // Workspace state lives in the URL so "back" from a case restores it exactly.
   const tab = (params.get('tab') as Tab) || 'all'
   const q = params.get('q') ?? ''
-  const sort = (params.get('sort') as SortKey) || 'easiest'
+  const sort = (params.get('sort') as SortKey) || 'deadline'
   const view = params.get('view') === 'list' ? 'list' : 'grid'
   const filters: Filters = {
     scheme: list(params.get('scheme')),
     category: list(params.get('category')),
     recommendation: list(params.get('rec')),
     confidence: list(params.get('conf')),
+    due: list(params.get('due')),
     flagged: params.get('flagged') === '1',
   }
   const update = (patch: Record<string, string | null>) => {
@@ -62,10 +63,17 @@ export function Dashboard() {
       category: f.category.join(',') || null,
       rec: f.recommendation.join(',') || null,
       conf: f.confidence.join(',') || null,
+      due: f.due.join(',') || null,
       flagged: f.flagged ? '1' : null,
     })
 
   useEffect(() => rememberDashboard(location.search), [location.search])
+
+  // Respond-by months present in the queue, as filter options.
+  const groups = useMemo(() => {
+    const months = [...new Set((cases ?? []).map((c) => c.respond_by?.slice(0, 7)).filter((m): m is string => !!m))].sort()
+    return [...FILTER_GROUPS, { key: 'due' as const, label: 'Respond by', options: months.map((m) => ({ value: m, label: monthLabel(m) })) }]
+  }, [cases])
 
   const shown = useMemo(() => applyFilters(cases ?? [], tab, q, filters, sort), [cases, tab, q, params.toString(), sort]) // eslint-disable-line react-hooks/exhaustive-deps
   const counts = useMemo(() => Object.fromEntries(TABS.map((t) => [t.key, (cases ?? []).filter((c) => t.match(c.status)).length])), [cases])
@@ -116,8 +124,8 @@ export function Dashboard() {
                   className="h-9 w-56 rounded-lg border border-line bg-surface pr-3 pl-9 text-[13px] outline-none transition-all focus:w-64 focus:border-blue focus:ring-4 focus:ring-blue/10"
                 />
               </label>
-              <FilterMenu filters={filters} onChange={setFilters} />
-              <SortMenu sort={sort} onChange={(s) => update({ sort: s === 'easiest' ? null : s })} />
+              <FilterMenu groups={groups} filters={filters} onChange={setFilters} />
+              <SortMenu sort={sort} onChange={(s) => update({ sort: s === 'deadline' ? null : s })} />
               <div className="flex rounded-lg border border-line bg-surface p-0.5">
                 {(['grid', 'list'] as const).map((v) => (
                   <button
@@ -134,7 +142,7 @@ export function Dashboard() {
             </div>
           </div>
 
-          <ActiveChips filters={filters} onChange={setFilters} />
+          <ActiveChips groups={groups} filters={filters} onChange={setFilters} />
 
           <div className="mt-5">
             {isLoading ? (
@@ -288,7 +296,9 @@ function usePopover() {
   return { open, setOpen, ref }
 }
 
-const FILTER_GROUPS: { key: keyof Omit<Filters, 'flagged'>; label: string; options: { value: string; label: string }[] }[] = [
+type FilterGroup = { key: keyof Omit<Filters, 'flagged'>; label: string; options: { value: string; label: string }[] }
+
+const FILTER_GROUPS: FilterGroup[] = [
   { key: 'scheme', label: 'Scheme', options: [{ value: 'visa', label: 'Visa' }, { value: 'mastercard', label: 'Mastercard' }] },
   { key: 'category', label: 'Category', options: CATEGORIES.map((c) => ({ value: c, label: c })) },
   {
@@ -302,7 +312,7 @@ const FILTER_GROUPS: { key: keyof Omit<Filters, 'flagged'>; label: string; optio
   { key: 'confidence', label: 'Confidence', options: ['High', 'Medium', 'Low'].map((c) => ({ value: c, label: c })) },
 ]
 
-function FilterMenu({ filters, onChange }: { filters: Filters; onChange: (f: Filters) => void }) {
+function FilterMenu({ groups, filters, onChange }: { groups: FilterGroup[]; filters: Filters; onChange: (f: Filters) => void }) {
   const { open, setOpen, ref } = usePopover()
   const n = countFilters(filters)
   const toggle = (key: keyof Omit<Filters, 'flagged'>, value: string) => {
@@ -327,7 +337,7 @@ function FilterMenu({ filters, onChange }: { filters: Filters; onChange: (f: Fil
             transition={{ duration: 0.14 }}
             className="absolute right-0 z-30 mt-2 w-[360px] origin-top-right rounded-2xl border border-line bg-surface p-4 shadow-[var(--shadow-pop)]"
           >
-            {FILTER_GROUPS.map((g) => (
+            {groups.map((g) => (
               <div key={g.key} className="mb-4 last:mb-0">
                 <p className="mb-2 text-[11px] font-semibold tracking-wide text-muted uppercase">{g.label}</p>
                 <div className="flex flex-wrap gap-1.5">
@@ -400,8 +410,8 @@ function SortMenu({ sort, onChange }: { sort: SortKey; onChange: (s: SortKey) =>
   )
 }
 
-function ActiveChips({ filters, onChange }: { filters: Filters; onChange: (f: Filters) => void }) {
-  const chips = FILTER_GROUPS.flatMap((g) =>
+function ActiveChips({ groups, filters, onChange }: { groups: FilterGroup[]; filters: Filters; onChange: (f: Filters) => void }) {
+  const chips = groups.flatMap((g) =>
     filters[g.key].map((v) => ({ key: g.key, value: v, label: g.options.find((o) => o.value === v)?.label ?? v })),
   )
   if (!chips.length && !filters.flagged) return null
