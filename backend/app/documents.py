@@ -2,7 +2,7 @@
 
 - PDF pages with a text layer: PyMuPDF text and word boxes (exact, free, instant).
 - Scanned PDF pages and standalone images: RapidOCR for text line boxes (used to place highlights)
-  + Claude vision for reading and understanding the image (used as the text the assessment sees).
+  + the vision model for reading and understanding the image (used as the text the assessment sees).
 - Images embedded inside text PDFs: OCR only, mapped onto the page coordinates.
 
 Results are cached per file hash so each document is processed once.

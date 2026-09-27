@@ -1,171 +1,127 @@
 # Exhibit
 
-A workbench for chargeback analysts. You give it a case (reason code, transaction data, issuer narrative and the merchant's evidence files) and it gives back a representment workup: what the issuer is alleging, whether each piece of compelling evidence is there, a draft rationale, and a recommended action. Every finding points at the exact passage in the merchant's documents, highlighted in place, so the analyst can check it in seconds instead of opening four PDFs.
+A workbench for chargeback analysts. Give it a case (reason code, transaction data, issuer narrative and the merchant's evidence files) and it returns an analyst-ready representment workup: what the issuer is alleging, whether each compelling-evidence requirement is met, a draft rationale and a recommended action. Every finding points at the exact line in the merchant's documents, highlighted in place, so the analyst can check it in seconds instead of opening four PDFs.
 
-There's a step-by-step tour with screenshots in [WALKTHROUGH.md](WALKTHROUGH.md).
+**Live demo: https://exhibit-disputes.fly.dev**. Browse the 10 provided cases, or upload a new one to watch a live analysis.
+**Walkthrough with screenshots:** [WALKTHROUGH.md](WALKTHROUGH.md)
 
-**Live demo:** https://exhibit-disputes.fly.dev. You can browse the 10 cases and also upload a new one to see a live analysis.
+![How a case is processed](docs/workflow.png)
 
-## Running it
+## Run it (under 10 minutes)
 
-The 10 provided cases come with their analysis already generated (in `seed/`), so you can browse everything without an API key. You only need a key to analyse new cases or re-analyse a case after adding evidence.
+The 10 provided cases ship with their analysis already generated (`seed/`), so everything can be browsed without an API key. A key is only needed to analyse new cases or re-analyse after adding evidence.
 
-**With Docker** (easiest):
+**With Docker**
 
 ```bash
 git clone https://github.com/yuktae/CaseStudy_Checkout_Yukta.git
 cd CaseStudy_Checkout_Yukta
-cp .env.example .env
+cp .env.example .env          # add ANTHROPIC_API_KEY to run new analyses
 docker compose up --build
 ```
 
-Then open http://localhost:8080. Add your `ANTHROPIC_API_KEY` to `.env` first if you want to run new analyses. The first build takes a few minutes because of the OCR runtime.
+Open http://localhost:8080. The first build takes a few minutes because of the OCR runtime.
 
-**Without Docker** (Python 3.12, Node 20+):
+**Without Docker** (Python 3.12, Node 20+)
 
 ```bash
 python -m venv .venv
 .venv/bin/pip install -r backend/requirements.txt
 .venv/bin/python -m uvicorn app.main:app --app-dir backend --port 8000
+# in a second terminal
+cd frontend && npm ci && npm run dev
 ```
 
-and in another terminal:
+Open http://localhost:5173. On Windows use `.venv\Scripts\` instead of `.venv/bin/`.
 
-```bash
-cd frontend
-npm ci
-npm run dev
-```
-
-Then open http://localhost:5173. On Windows use `.venv\Scripts\` instead of `.venv/bin/`.
-
-**Command line:**
+**From the command line**
 
 ```bash
 cd backend
 ../.venv/bin/python -m app.cli run --all   # analyse every case and refresh seed/
-../.venv/bin/python -m app.cli eval        # compare the recommendations with eval/expected.json
+../.venv/bin/python -m app.cli eval        # compare with the expected actions in eval/expected.json
 ../.venv/bin/python -m pytest tests -q     # tests, no API key needed
 ```
 
-`data/` is the challenge dataset exactly as provided (its own README is in there). To use a different dataset, replace `data/` (same `cases.json` + `documents/` layout), delete `storage/` and run `app.cli run --all`. Nothing in the code is specific to these 10 cases.
+## How a case flows through the code
 
-## How it works
+The split is deliberate: the LLM does the reading and the writing, and plain code does everything that has to be exact (rules, dates, counting, checking quotes, the final decision). The backend lives in `backend/app/`.
 
-Each case goes through the same steps:
+1. **Intake** (`main.py`, `pipeline.py`). The case is validated against the `cases.json` schema, the files are stored and a background job starts. Its progress shows in a small panel in the UI.
+2. **Reading the documents** (`documents.py`, `vision.py`). PDFs go through PyMuPDF, which gives the text and the position of every word. Images are read by a vision model, and RapidOCR finds where each line sits so it can be highlighted.
+3. **Rules and checks** (`rules.yaml`, `rules.py`). `reason_codes.md` is encoded as data: each code's requirements and whether it needs all of them, any two, any one, or can't be represented at all (Visa 10.5, Mastercard 4870). This step also builds the AVS, CVV, 3DS and address checks, and finds linked cases that share a device, IP or postcode.
+4. **Assessment** (`assess.py`). One structured LLM call per case. For each requirement it returns a verdict, a finding, verbatim quotes with their page, the gap and whether the merchant could fix it. It also marks irrelevant documents, flags conflicts, and drafts the rationale, justification and merchant requests.
+5. **Checking every quote** (`locate.py`). Each quote is searched for in the extracted text (exact first, then fuzzy) and turned into highlight boxes. A quote on the wrong page is moved to the right one. A quote that can't be found doesn't count as evidence and lowers the verdict it supported.
+6. **The decision** (`decide.py`). The recommended action comes from the verified verdicts and the rule logic, not from the model. Delivery dates are checked against the chargeback date. If the model's own recommendation disagrees, the case is flagged "Needs judgement". Confidence always comes with the reasons that lowered it.
 
-1. **Intake.** The case is validated against the `cases.json` schema and the files are stored.
-2. **Reading the documents.** For PDFs I use PyMuPDF, which gives the text and the position of every word on the page. Images (and scanned pages) are read by Claude's vision model, and RapidOCR finds where each line of text sits so it can be highlighted.
-3. **Rule checks, in code.** `reason_codes.md` is turned into `rules.yaml`: each code's requirements and whether all of them are needed, any two, or any one. Some codes (Visa 10.5, Mastercard 4870) are auto-accept. This step also builds the transaction signals (AVS, CVV, 3DS, address, device) and finds linked cases that share a device, IP or postcode.
-4. **Assessment, by the LLM.** One Claude call per case, with structured JSON output. For each requirement it returns a verdict, a short finding, verbatim quotes with the page they came from, the gap and whether it's fixable. It also says which documents are irrelevant, flags conflicts, and drafts the rationale, justification and merchant requests.
-5. **Checking the quotes.** Every quote is searched for in the extracted text (exact first, then fuzzy, tolerant of line breaks and OCR spacing) and turned into highlight boxes. If the model cites the wrong page, the quote is found on the right one. If it can't be found at all, it's marked unverified, doesn't count as evidence, and lowers the verdict it was supporting.
-6. **The decision, in code.** The recommended action comes from the verified verdicts and the rule logic, not from the model. Delivery dates are checked against the chargeback date in code too. If the model's own recommendation disagrees with the rules, the case is flagged "Needs judgement" and both views are shown. Confidence comes with the reasons that lowered it.
+The frontend (`frontend/src`, React + TypeScript) has two pages: the dashboard (`pages/dashboard`) and the case analysis (`pages/analysis`).
 
-The split is deliberate: anything that has to be exact (rules, dates, counting, checking quotes) is plain code, and the model does the reading and the writing.
+## What the analyst sees
 
-The default model is `claude-opus-5` (change it with `MODEL` in `.env`). A case takes about 40 seconds.
+![Dashboard](docs/screenshots/01-dashboard.png)
 
-### Why this approach to documents
+**Dashboard.** The case queue, sorted easiest first so clean cases can be cleared quickly. Each card answers the triage questions: who, how much, which rule, what the tool recommends, how sure it is, and whether something needs a look. Tabs follow the case lifecycle, and filters and search are kept in the URL.
 
-The brief asks how to handle PDFs and images. Each option on its own has a catch:
+![Case analysis](docs/screenshots/11-case-analysis.png)
 
-- Text extraction alone is fast and exact, but it can't see screenshots. In case 0002 the only proof of delivery is a PNG.
-- Tesseract OCR would need a system install, which works against "runnable in 10 minutes", and it reads characters without understanding them ("front view only", "left in safe place").
-- A vision model understands images well but can't tell you where on the page a line is, and I needed that for highlighting.
+**Case analysis.** The verdict and the transaction checks sit at the top. Anything easy to miss (a conflict, a rule that forces the outcome, evidence on page 8 of 10) shows as a heads-up chip. The workup follows the brief's order: reason code summary with a "to defend" checklist, evidence assessment, rationale, recommended action and merchant requests. The documents are on the right, and clicking a quote jumps to the highlighted line.
 
-So it's a mix. PyMuPDF for PDF text and positions, Claude vision to read images, and RapidOCR (a pip install, no system dependencies) to locate lines in images. Images embedded inside PDFs get OCR'd and mapped back onto the page. In the UI, each quote shows where it came from: verified in the document, read from an image, taken from the vision model's description, or not found.
+**What the analyst can override:** any verdict (with a note), whether a document counts as evidence, the recommended action (a reason is required), the justification, the rationale and the merchant requests. The AI's version is kept next to the analyst's. "Add evidence" uploads more files and re-analyses the case as a new version.
 
-### Surfacing uncertainty
+## Reading the documents: the tradeoff
 
-The brief says this matters more than getting every call right, so the tool is explicit about what it isn't sure of:
+- Text extraction alone is fast and exact, but it can't see images. In case 0002 the only proof of delivery is a screenshot.
+- Tesseract OCR needs a system install, which works against "runnable in 10 minutes", and it reads characters without understanding them ("front view only", "left in safe place").
+- A vision model understands images well but can't say where on the page a line is, which highlighting needs.
 
-- unverified quotes are struck through and don't count;
-- "Needs judgement" when the rules and the model disagree, and the draft rationale says if it argues for the other action;
-- confidence is shown with its reasons, for example "key evidence read from an image" (a conflict lowers it when representing or asking for evidence, but not when accepting, because a merchant claim the data contradicts can only support accepting);
-- alerts for things that are easy to miss: evidence on page 8 of 10, a rule that forces the outcome, a missing file, linked cases;
-- "not relevant" is kept separate from "missing", so a merchant's own fraud score shows up as uploaded but irrelevant, with the reason.
+So it's a mix: PyMuPDF for PDF text and positions, a vision model to read images, and RapidOCR (a pip install, no system dependencies) to locate their lines. Each quote in the UI shows where it came from: verified in the document, read from an image, or not found.
 
-## The analyst side
+## Surfacing uncertainty
 
-I designed the screens around cognitive load. The scheme rules are complicated and there's no point hiding that. What can go is the effort the current process adds on top: looking the rules up again, hunting through PDFs, writing everything from scratch, and flicking between windows to connect a requirement with its evidence.
+- Quotes that can't be found in the documents are struck through and don't count.
+- "Needs judgement" appears when the rule check and the model disagree, and the rationale is labelled if it argues for the other action.
+- Confidence is shown with its reasons, for example "key evidence read from an image".
+- "Not relevant" is kept separate from "missing", so a merchant's own fraud score shows as uploaded but irrelevant, with the reason.
+- Heads-up chips cover what's easy to miss: conflicts, deep pages, rules that decide the outcome, linked cases.
 
-**Dashboard.** A "New case" area at the top (drop files or a case JSON, or open the form), and the case list underneath. The list has status tabs (To review, In review, Awaiting merchant, Completed), search, filters (scheme, category, recommendation, confidence, flags) and a sort that defaults to easiest first, so the clean cases can be cleared quickly. Filters are kept in the URL, so going back from a case restores the view. New analyses show their progress in a small panel in the bottom right.
+## Results on the 10 cases
 
-**Case page.** A compact header gives the verdict and the confidence, and a single profile card shows the case and the transaction checks (AVS, CVV, 3DS, addresses, device). Anything the analyst mustn't miss sits in a row of small heads-up chips just below. The workup is on the left, in the order the brief lists it, with a step bar to jump between sections: reason code summary with a "To defend" checklist, evidence assessment (one card per requirement), the rationale as numbered points, recommended action, and the merchant requests when more evidence is needed. The documents are on the right, and switching between them doesn't reload them. Clicking a quote opens the right document, scrolls to the page and pulses the highlight. Hovering a requirement lights up its highlights, and clicking a highlight takes you back to the requirement. `[` and `]` step through the evidence.
+Before building the tool I wrote down the expected action for each case (`eval/expected.json`). The tool agrees on all 10, and all 51 quotes it cited were found in the documents.
 
-**What the analyst can change.** Any verdict (with a note), whether a document counts as evidence, the recommended action (a reason is required), the justification, the rationale and the merchant requests. The AI's version is kept next to the analyst's. Save keeps the review. Complete shows a summary of what's being filed, sets the status and moves on to the next open case. "Add evidence" opens a dialog for any number of files, shows placeholders for the documents the requirements still need, and warns that the case will be re-analysed; the new analysis becomes a new version, changed verdicts are tagged "Updated", and edited text is kept with a note if the AI now suggests something different.
-
-## Results on the provided cases
-
-Before building the tool, I wrote down the expected action for each case from a read-through against the rules (`eval/expected.json`). The tool agrees on all 10, and all 51 quotes it cited were found in the documents. The dataset README gives a one-line hint per case, so here is how each one comes out:
-
-| Case | Code | Hint | Recommendation | Confidence | What the analyst sees |
+| Case | Code | Dataset hint | Recommendation | Confidence | What the analyst sees |
 |---|---|---|---|---|---|
-| 0001 | Visa 13.1 | Straightforward, sanity check | Represent | High | Signed delivery to the matching address; linked to 0005 and 0010 (same device and IP) |
-| 0002 | Visa 13.1 | Check the addresses carefully | Request more evidence | Low | Delivered to an address the cardholder disputes, billing and shipping postcodes differ and AVS failed; the proof is a screenshot |
-| 0003 | MC 4837 | How many of the four are needed? | Represent | High | Any two are needed: AVS + CVV match and 3DS |
-| 0004 | MC 4837 | The evidence sounds confident | Accept liability | High | The merchant's risk score is marked not relevant, and its "legitimate" conclusion is flagged against failed AVS, CVV and no 3DS |
-| 0005 | Visa 12.6.1 | Two charges, same amount, same day | Represent | High | Two separate orders; a BST/UTC label difference is noted |
-| 0006 | Visa 13.3 | What can the photo tell you? | Request more evidence | Low | A front-view photo can't show a wobbling frame; nothing shows what happened to the refund request |
-| 0007 | MC 4855 | The evidence is in there somewhere | Represent | High | The proof is on page 8 of 10, matched on the transaction reference rather than the look-alike rows |
+| 0001 | Visa 13.1 | Straightforward | Represent | High | Signed delivery to the matching address |
+| 0002 | Visa 13.1 | Check the addresses | Request more evidence | Low | Delivered to an address the cardholder disputes; postcodes differ, AVS failed; the proof is a screenshot |
+| 0003 | MC 4837 | How many are needed? | Represent | High | Any two are needed: AVS + CVV match and 3DS |
+| 0004 | MC 4837 | Evidence sounds confident | Accept liability | High | The merchant's risk score is marked not relevant; its "legitimate" conclusion is flagged against failed AVS, CVV and no 3DS |
+| 0005 | Visa 12.6.1 | Two charges, same day | Represent | High | Two separate orders |
+| 0006 | Visa 13.3 | What can the photo tell you? | Request more evidence | Low | A front-view photo can't show a wobbling frame; nothing shows the refund request was answered |
+| 0007 | MC 4855 | Evidence is in there somewhere | Represent | High | The proof is one line on page 8 of 10, matched on the transaction reference |
 | 0008 | Visa 13.2 | Policy vs proof | Request more evidence | Medium | Only generic terms; a policy isn't proof a notice was sent |
-| 0009 | MC 4859 | Read the policy and the log together | Represent | Medium | All four requirements met, but the booking says the rate was charged at booking while this charge is dated the stay day: confirm there's no double charge before filing |
-| 0010 | Visa 10.5 | Read the reason code rules carefully | Accept liability | High | 10.5 can only be fought by proving miscoding; the genuine-looking 3DS and delivery evidence is shown but doesn't count |
+| 0009 | MC 4859 | Read the policy and the log together | Represent | Medium | All four met, but the booking says the rate was charged at booking while this charge is dated the stay day: confirm there's no double charge |
+| 0010 | Visa 10.5 | Read the rules carefully | Accept liability | High | 10.5 can only be fought by proving miscoding; the genuine-looking evidence doesn't count |
 
-A few honest caveats. After the first full run I adjusted the prompt to stick to the simplified rule wording, keep flags for things that matter, and always produce merchant requests when asking for evidence. After reading the dataset README I adjusted it again: the `A` AVS code, local time for hotel and French documents, checking the charge timing against the merchant's own documents, and making clear that proof of a genuine transaction isn't proof of miscoding under 10.5. On the run before that change, the model was persuaded by 0010's evidence and argued for representing; the auto-accept rule in code held the outcome and flagged the case "Needs judgement", which is what that safety net is for. With only 10 cases there's no held-out set, so treat the 10/10 as a sanity check rather than a benchmark. Between runs, the variation shows up in the flags and confidence rather than the actions.
-
-## Project layout
-
-```
-backend/app/
-  main.py         API, and serves the built frontend
-  pipeline.py     runs the steps, background jobs, seeding
-  documents.py    PDF text and positions, OCR, image pages
-  vision.py       Claude vision call
-  assess.py       Claude assessment call (prompt and output schema)
-  locate.py       finds each quote and builds the highlight boxes
-  decide.py       rule logic, date checks, confidence, alerts
-  rules.py/.yaml  scheme rules, transaction signals, linked cases
-  llm.py          Anthropic client (structured output, fallback, errors)
-  cli.py          run and eval commands
-backend/tests/    pipeline tests with the LLM calls stubbed out
-frontend/src/     React + TypeScript (Vite, Tailwind, Framer Motion, react-pdf)
-data/             the challenge dataset
-seed/workups/     pre-generated analyses for the demo
-eval/             expected actions used by the eval command
-```
+With only 10 cases there's no held-out set, so treat 10/10 as a sanity check rather than a benchmark. Between runs the variation shows up in flags and confidence, not in the actions. On one earlier run the model argued to represent 0010; the rule in code held the outcome and flagged the case "Needs judgement", which is what that safety net is for.
 
 ## Configuration
 
 Set in `.env` (see `.env.example`):
 
-| Variable | Default | What it does |
-|---|---|---|
-| `ANTHROPIC_API_KEY` | empty | Needed for new analyses and re-analysis |
-| `MODEL` | `claude-opus-5` | Model used for both calls |
-| `ASSESS_EFFORT`, `VISION_EFFORT` | `high`, `medium` | Reasoning effort per call |
-| `DEMO_ACCESS_CODE` | empty | If set, uploads and re-analysis ask for this code (useful on a public URL) |
-| `SEED_ON_START` | `true` | Load `data/` and `seed/` on first start |
-| `MAX_FILES`, `MAX_FILE_MB` | `4`, `20` | Upload limits |
+| Variable | What it does |
+|---|---|
+| `ANTHROPIC_API_KEY` | Needed for new analyses and re-analysis |
+| `MODEL`, `ASSESS_EFFORT`, `VISION_EFFORT` | Model and reasoning effort for the two LLM calls |
+| `DEMO_ACCESS_CODE` | If set, uploads and re-analysis ask for this code |
+| `SEED_ON_START` | Load `data/` and `seed/` on first start |
+| `MAX_FILES`, `MAX_FILE_MB` | Upload limits |
 
-## Deploying
+`data/` is the challenge dataset exactly as provided. To use another one, replace `data/` (same layout), delete `storage/` and run `app.cli run --all`. Nothing in the code is specific to these 10 cases. A `fly.toml` is included; the live demo runs on fly.io.
 
-There's a `fly.toml` for fly.io. With the fly CLI logged in:
-
-```bash
-fly apps create exhibit-disputes
-fly volumes create exhibit_data --region lhr --size 1
-fly secrets set ANTHROPIC_API_KEY=... DEMO_ACCESS_CODE=...
-fly deploy
-```
-
-Browsing is open; uploading and re-analysing ask for the access code so a public link can't run up API costs.
-
-## Limitations and what I'd do next
+## Limitations and next steps
 
 - The rules are the simplified ones from the exercise, with no time limits, thresholds or exclusions.
-- Confidence is a simple, transparent heuristic, not a calibrated probability. Since overrides are stored next to the AI's original answers, the obvious next step is to measure where analysts disagree, by reason code, and tune from that.
-- One assessment call per case is fine at this size (the 10-page manifest is about 6,000 characters). Much bigger evidence packs would need a retrieval step first.
-- Image highlights depend on OCR finding the line. When it can't, the whole image is outlined and marked as approximate.
-- SQLite on one volume is fine for a demo. A production version would need Postgres, object storage, authentication and per-analyst audit trails.
-- Not built yet: a "regenerate rationale" button, and an insights page (override rate by reason code, time per case).
+- Confidence is a transparent heuristic, not a calibrated probability. Overrides are stored next to the AI's answers, so the next step is to measure where analysts disagree, by reason code, and tune from that.
+- One assessment call per case is fine at this size. Much larger evidence packs would need a retrieval step first.
+- Image highlights depend on OCR finding the line; when it can't, the highlight is placed approximately and the quote says so.
+- SQLite on one volume is fine for a demo. Production would need Postgres, object storage, authentication and per-analyst audit trails.
+- Next features: pre-filling a new case from its documents, and an insights page (override rate by reason code, time per case).

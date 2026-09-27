@@ -409,7 +409,7 @@ export function RequestsSection({ items, onChange, edited, onReset, kase, readOn
 
 // --------------------------------------------------------------- Activity
 
-export function ActivitySection({ activity, model }: { activity: { text: string; created_at: string }[]; model: string }) {
+export function ActivitySection({ activity }: { activity: { text: string; created_at: string }[] }) {
   const [open, setOpen] = useState(false)
   return (
     <section>
@@ -426,7 +426,6 @@ export function ActivitySection({ activity, model }: { activity: { text: string;
                 <span className="text-muted tabular">{dateTime(a.created_at)}</span>
               </li>
             ))}
-            <li className="py-2 text-[12px] text-muted">Analysis model: {model}</li>
           </motion.ul>
         )}
       </AnimatePresence>

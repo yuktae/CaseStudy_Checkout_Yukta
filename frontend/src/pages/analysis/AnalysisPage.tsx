@@ -471,7 +471,7 @@ function AnalysisView({ detail, viewingOld }: { detail: CaseDetail; viewingOld: 
               </div>
             )}
 
-            <ActivitySection activity={detail.activity} model={workup.model} />
+            <ActivitySection activity={detail.activity} />
           </div>
 
           {/* Re-analysis overlay */}

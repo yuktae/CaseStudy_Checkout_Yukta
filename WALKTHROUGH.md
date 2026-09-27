@@ -38,7 +38,7 @@ Case **CB-2025-0007** is the "buried evidence" case. The merchant uploaded a 10-
 
 Case **CB-2025-0002**: the only proof of delivery is a screenshot.
 
-- Claude's vision model reads the screenshot and OCR finds each line so it can be highlighted. The eye icon on a quote means it came from an image.
+- The vision model reads the screenshot and OCR finds each line so it can be highlighted. The eye icon on a quote means it came from an image.
 - The verdict is **Partial**: the parcel was "left in safe place: front porch", with no signature, at an address the cardholder says isn't theirs. The billing and shipping postcodes differ and AVS failed. The gap is **Fixable**, so the recommendation is to request more evidence with a specific list (prior orders to that address, login and IP records, carrier photo or GPS).
 - Confidence is **Low**, and the reasons are stated: key evidence from an image, and evidence that conflicts with the claim.
 

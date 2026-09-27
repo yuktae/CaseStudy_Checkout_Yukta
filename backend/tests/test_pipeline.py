@@ -1,4 +1,4 @@
-"""Pipeline tests that run without an API key: the two Claude calls are replaced with fixed outputs,
+"""Pipeline tests that run without an API key: the two LLM calls are replaced with fixed outputs,
 so these exercise extraction, locate & verify, the decision rules and the API end to end."""
 
 import os

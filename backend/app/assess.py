@@ -1,4 +1,4 @@
-"""Assessment agent: one structured Claude call per case, over the rules, the case data and every document page."""
+"""Assessment agent: one structured LLM call per case, over the rules, the case data and every document page."""
 
 import hashlib
 import json

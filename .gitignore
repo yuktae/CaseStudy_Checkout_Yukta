@@ -1,11 +1,3 @@
-# Private working notes (not part of the submission)
-NOTES.md
-Technical Challenge.docx
-BUILD_PLAN.md
-PLATFORM_DESIGN.md
-CASE_ANALYSIS.md
-.claude/
-
 # Environment and runtime state
 .env
 .venv/

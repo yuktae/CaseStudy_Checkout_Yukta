@@ -1,4 +1,4 @@
-"""Vision agent: Claude reads an evidence image (screenshot, photo, scanned page) and transcribes it."""
+"""Vision agent: the vision model reads an evidence image (screenshot, photo, scanned page) and transcribes it."""
 
 import base64
 
