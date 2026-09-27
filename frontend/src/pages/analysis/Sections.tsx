@@ -68,12 +68,16 @@ export function ReasonSection({ workup, kase, items, onPick }: { workup: Workup;
         <dl className="mt-4 grid gap-3.5 text-[13.5px] leading-relaxed">
           {rule.definition && (
             <div>
-              <dt className="mb-0.5 text-[11px] font-semibold tracking-wide text-muted uppercase">What this code means</dt>
+              <dt className="mb-1 flex items-center gap-2 text-[13.5px] font-bold text-ink">
+                <span className="h-3.5 w-1 shrink-0 rounded-full bg-blue" />
+                What this code means
+              </dt>
               <dd className="text-text-2">{rule.definition}</dd>
             </div>
           )}
           <div>
-            <dt className="mb-0.5 flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-muted uppercase">
+            <dt className="mb-1 flex items-center gap-2 text-[13.5px] font-bold text-ink">
+              <span className="h-3.5 w-1 shrink-0 rounded-full bg-blue" />
               The issuer’s claim in this case
               <Tooltip text={<>Issuer’s original words: “{kase.issuer_narrative}”</>}>
                 <MessageSquareQuote className="size-3.5 text-blue" aria-label="Issuer’s original words" />
@@ -82,10 +86,11 @@ export function ReasonSection({ workup, kase, items, onPick }: { workup: Workup;
             <dd className="text-text">{workup.summary.allegation}</dd>
           </div>
           <div>
-            <dt className="mb-1 flex flex-wrap items-center gap-2 text-[11px] font-semibold tracking-wide text-muted uppercase">
+            <dt className="mb-1.5 flex flex-wrap items-center gap-2 text-[13.5px] font-bold text-ink">
+              <span className="h-3.5 w-1 shrink-0 rounded-full bg-blue" />
               To defend
-              <span className="rounded bg-blue-soft px-1.5 py-px text-[10px] tracking-normal text-blue normal-case">{rule.logic_label}</span>
-              <span className={clsx('ml-auto rounded px-1.5 py-px text-[10.5px] tracking-normal normal-case', met ? 'bg-ok-soft text-ok' : 'bg-warn-soft text-warn')}>
+              <span className="rounded bg-blue-soft px-1.5 py-px text-[11px] font-semibold text-blue">{rule.logic_label}</span>
+              <span className={clsx('ml-auto rounded px-1.5 py-px text-[11px] font-semibold', met ? 'bg-ok-soft text-ok' : 'bg-warn-soft text-warn')}>
                 {proven} of {need} needed proven
               </span>
             </dt>
